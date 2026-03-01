@@ -1,0 +1,62 @@
+version: 1
+mode: pre-release
+isHighRiskRelease: true
+windowDays: 14
+requiredCheckpointPasses: 2
+
+sampleMinimums:
+  coreReplay: 200
+  highRisk: 1000
+
+thresholds:
+  unverifiedSubmissions: 0
+  highRiskFalseAllowRate: 0.001
+  highRiskFalseAllowU95: 0.001
+  verifyP95Ms: 2000
+  rollbackSuccessRate: 0.99
+  undeclaredCapBlockRate: 1.0
+  policyClosedLoopRate: 1.0
+
+rules:
+  - id: gate_trust_unverified_zero
+    severity: block
+    expr: unverified_submissions == 0 && window_days >= 14 && checkpoint_passes >= 2
+    onFail:
+      freezeRelease: true
+      allowHotfixOnly: true
+
+  - id: gate_security_false_allow
+    severity: block
+    expr: high_risk_samples >= 1000 && high_risk_false_allow_rate <= 0.001 && high_risk_false_allow_u95 <= 0.001
+    onFail:
+      createIncident: true
+      incidentSeverity: P0
+
+  - id: gate_governance_closed_loop
+    severity: block
+    expr: policy_change_total == 0 || policy_closed_loop_rate == 1.0
+    onFail:
+      freezePolicyRelease: true
+
+  - id: gate_sample_minimum
+    severity: block
+    expr: core_replay_samples >= 200 && (!is_high_risk_release || high_risk_samples >= 1000)
+    onFail:
+      allowDataBackfillOnly: true
+
+stageMapping:
+  phase0:
+    mustPass: [gate_sample_minimum]
+  phase1:
+    mustPass: [gate_sample_minimum, gate_trust_unverified_zero]
+  phase2:
+    mustPass: [gate_trust_unverified_zero, gate_security_false_allow]
+  phase3:
+    mustPass: [gate_trust_unverified_zero, gate_security_false_allow]
+    extraExpr: verify_p95_ms < 2000
+  phase4:
+    mustPass: [gate_trust_unverified_zero, gate_security_false_allow, gate_sample_minimum]
+    extraExpr: undeclared_cap_block_rate == 1.0
+  phase5:
+    mustPass: [gate_trust_unverified_zero, gate_security_false_allow, gate_governance_closed_loop, gate_sample_minimum]
+    extraExpr: rollback_success_rate >= 0.99

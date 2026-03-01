@@ -1,0 +1,163 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://example.local/gate-report.schema.json",
+    "title": "Gate Report",
+    "type": "object",
+    "required": [
+        "version",
+        "mode",
+        "generatedAt",
+        "windowDays",
+        "summary",
+        "gates"
+    ],
+    "properties": {
+        "version": {
+            "type": "string"
+        },
+        "mode": {
+            "type": "string",
+            "enum": [
+                "pre-merge",
+                "nightly",
+                "pre-release"
+            ]
+        },
+        "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+        },
+        "windowDays": {
+            "type": "integer",
+            "minimum": 1
+        },
+        "summary": {
+            "type": "object",
+            "required": [
+                "status",
+                "passed",
+                "failed",
+                "blocked"
+            ],
+            "properties": {
+                "status": {
+                    "type": "string",
+                    "enum": [
+                        "PASS",
+                        "FAIL",
+                        "BLOCKED"
+                    ]
+                },
+                "passed": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "failed": {
+                    "type": "integer",
+                    "minimum": 0
+                },
+                "blocked": {
+                    "type": "integer",
+                    "minimum": 0
+                }
+            }
+        },
+        "gates": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "required": [
+                    "id",
+                    "status",
+                    "severity",
+                    "expr",
+                    "actual"
+                ],
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "PASS",
+                            "FAIL",
+                            "SKIP"
+                        ]
+                    },
+                    "severity": {
+                        "type": "string",
+                        "enum": [
+                            "warn",
+                            "block"
+                        ]
+                    },
+                    "expr": {
+                        "type": "string"
+                    },
+                    "actual": {
+                        "type": "object"
+                    },
+                    "reasonCode": {
+                        "type": "string",
+                        "enum": [
+                            "OK",
+                            "DENOMINATOR_ZERO",
+                            "INSUFFICIENT_SAMPLE",
+                            "WINDOW_TOO_SHORT",
+                            "CHECKPOINT_NOT_ENOUGH",
+                            "THRESHOLD_EXCEEDED",
+                            "CONFIDENCE_BOUND_EXCEEDED",
+                            "CLOSED_LOOP_MISSING",
+                            "DATA_MISSING",
+                            "RULE_ERROR",
+                            "SKIPPED_BY_MODE",
+                            "EXCEPTION_APPROVED"
+                        ]
+                    },
+                    "evidence": {
+                        "type": "object",
+                        "properties": {
+                            "numerator": {
+                                "type": "number"
+                            },
+                            "denominator": {
+                                "type": "number"
+                            },
+                            "rate": {
+                                "type": "number"
+                            },
+                            "threshold": {
+                                "type": "number"
+                            },
+                            "u95": {
+                                "type": "number"
+                            },
+                            "windowDays": {
+                                "type": "integer",
+                                "minimum": 1
+                            },
+                            "checkpointPasses": {
+                                "type": "integer",
+                                "minimum": 0
+                            }
+                        },
+                        "additionalProperties": true
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "actions": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                }
+            }
+        },
+        "metricsSnapshot": {
+            "type": "object"
+        }
+    }
+}
