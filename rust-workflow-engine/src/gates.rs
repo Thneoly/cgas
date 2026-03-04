@@ -179,8 +179,9 @@ pub fn gate_phase2_readiness(_: &WorkflowContext) -> Result<(), EngineError> {
     ];
 
     for file in required_files {
-        let content = fs::read_to_string(file)
-            .map_err(|e| EngineError::GateFailed(format!("phase2 readiness missing {}: {}", file, e)))?;
+        let content = fs::read_to_string(file).map_err(|e| {
+            EngineError::GateFailed(format!("phase2 readiness missing {}: {}", file, e))
+        })?;
 
         if content.contains("{{") || content.contains("}}") {
             return Err(EngineError::GateFailed(format!(
@@ -191,12 +192,82 @@ pub fn gate_phase2_readiness(_: &WorkflowContext) -> Result<(), EngineError> {
     }
 
     let gate_final = fs::read_to_string("../doc/phase01/phase1_week6_gate_final_review.md")
-        .map_err(|e| EngineError::GateFailed(format!("phase2 readiness gate final read failed: {}", e)))?;
+        .map_err(|e| {
+            EngineError::GateFailed(format!("phase2 readiness gate final read failed: {}", e))
+        })?;
     if !has_explicit_gate_decision(&gate_final) {
         return Err(EngineError::GateFailed(
-            "phase2 readiness requires explicit Go/Conditional Go/No-Go conclusion"
-                .to_string(),
+            "phase2 readiness requires explicit Go/Conditional Go/No-Go conclusion".to_string(),
         ));
+    }
+
+    Ok(())
+}
+
+pub fn gate_artifact_skill_execution(ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let required = [Role::PM, Role::Dev, Role::QA, Role::Security, Role::SRE];
+
+    for role in required {
+        let artifact_key = format!("{}_artifact", role.as_key().to_lowercase());
+        let artifact = ctx.artifacts.get(&artifact_key).ok_or_else(|| {
+            EngineError::GateFailed(format!("missing artifact for role {}", role.as_key()))
+        })?;
+
+        let payload = &artifact.payload;
+
+        let Some(skills_applied) = payload.get("skills_applied").and_then(Value::as_array) else {
+            return Err(EngineError::GateFailed(format!(
+                "{} missing skills_applied array",
+                artifact_key
+            )));
+        };
+        if skills_applied.is_empty()
+            || skills_applied
+                .iter()
+                .any(|v| v.as_str().is_none_or(|s| s.trim().is_empty()))
+        {
+            return Err(EngineError::GateFailed(format!(
+                "{} has invalid skills_applied",
+                artifact_key
+            )));
+        }
+
+        let Some(risk_controls) = payload.get("risk_controls").and_then(Value::as_array) else {
+            return Err(EngineError::GateFailed(format!(
+                "{} missing risk_controls array",
+                artifact_key
+            )));
+        };
+        if risk_controls.is_empty()
+            || risk_controls
+                .iter()
+                .any(|v| v.as_str().is_none_or(|s| s.trim().is_empty()))
+        {
+            return Err(EngineError::GateFailed(format!(
+                "{} has invalid risk_controls",
+                artifact_key
+            )));
+        }
+
+        let Some(evidence_refs) = payload.get("evidence_refs").and_then(Value::as_object) else {
+            return Err(EngineError::GateFailed(format!(
+                "{} missing evidence_refs object",
+                artifact_key
+            )));
+        };
+
+        for key in ["skill_evidence", "risk_evidence"] {
+            let value = evidence_refs
+                .get(key)
+                .and_then(Value::as_str)
+                .unwrap_or_default();
+            if value.trim().is_empty() {
+                return Err(EngineError::GateFailed(format!(
+                    "{} evidence_refs missing {}",
+                    artifact_key, key
+                )));
+            }
+        }
     }
 
     Ok(())

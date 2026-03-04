@@ -22,7 +22,7 @@ impl OpenClawExecutor for CliOpenClawExecutor {
     fn execute(&self, role: &Role, prompt: &str, release_id: &str) -> Result<Value, EngineError> {
         let role_identity = phase01_role_identity_prompt(role);
         let message = format!(
-            "{}\n\nrelease_id={}\n任务={}\n\n输出要求：\n1) 仅输出一个 JSON 对象，不允许 markdown 或额外说明。\n2) 字段必须包含：role, release_id, decision, summary, next_role, evidence。\n3) decision 仅允许 approved/rejected。\n4) evidence 必须包含 metric_value, window, sample_size, source。\n5) next_role 允许为 null。\n6) 必须提供 deliverables 数组，每项包含 path 与 content 字段，用于落地交付物文件。\n7) path 必须是相对路径（例如 phase1_week1_adr_v1.md），content 必须是完整 markdown 文本。",
+            "{}\n\nrelease_id={}\n任务={}\n\n输出要求：\n1) 仅输出一个 JSON 对象，不允许 markdown 或额外说明。\n2) 字段必须包含：role, release_id, decision, summary, next_role, evidence, skills_applied, risk_controls, evidence_refs。\n3) decision 仅允许 approved/rejected。\n4) evidence 必须包含 metric_value, window, sample_size, source。\n5) skills_applied 必须为非空字符串数组，列出本次执行使用的技能。\n6) risk_controls 必须为非空字符串数组，列出本次风险控制措施。\n7) evidence_refs 必须为对象，至少包含 skill_evidence 与 risk_evidence 字段。\n8) next_role 允许为 null。\n9) 必须提供 deliverables 数组，每项包含 path 与 content 字段，用于落地交付物文件。\n10) path 必须是相对路径（例如 phase1_week1_adr_v1.md），content 必须是完整 markdown 文本。",
             role_identity, release_id, prompt
         );
         let role_agent_key = format!("OPENCLAW_AGENT_{}", role.as_key().to_ascii_uppercase());
@@ -201,6 +201,19 @@ impl OpenClawExecutor for MockOpenClawExecutor {
             "summary": format!("{} executed prompt", role.as_key()),
             "prompt_hash": format!("len:{}", prompt.len()),
             "next_role": next_role,
+            "skills_applied": [
+                "pmp_baseline",
+                format!("{}_role_skill", role.as_key().to_lowercase())
+            ],
+            "risk_controls": [
+                "gate_alignment",
+                "evidence_traceability"
+            ],
+            "evidence_refs": {
+                "skill_evidence": "prompt_contract_v2",
+                "risk_evidence": "gate_rules_v1",
+                "artifact_version": "v2"
+            },
             "deliverables": [
                 {
                     "path": deliverable_path,

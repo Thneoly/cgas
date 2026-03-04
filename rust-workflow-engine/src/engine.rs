@@ -433,7 +433,10 @@ impl WorkflowEngine {
                 continue;
             };
 
-            let deliverables = artifact.payload.get("deliverables").and_then(Value::as_array);
+            let deliverables = artifact
+                .payload
+                .get("deliverables")
+                .and_then(Value::as_array);
             let mut wrote_any = false;
 
             if let Some(deliverables) = deliverables {
@@ -679,7 +682,16 @@ fn build_dispatch_audit(
 fn role_artifact_schema() -> Value {
     json!({
         "type": "object",
-        "required": ["role", "release_id", "decision", "summary", "evidence"],
+        "required": [
+            "role",
+            "release_id",
+            "decision",
+            "summary",
+            "evidence",
+            "skills_applied",
+            "risk_controls",
+            "evidence_refs"
+        ],
         "properties": {
             "role": { "type": "string" },
             "release_id": { "type": "string" },
@@ -687,6 +699,26 @@ fn role_artifact_schema() -> Value {
             "summary": { "type": "string" },
             "prompt_hash": { "type": "string" },
             "next_role": { "type": ["string", "null"] },
+            "skills_applied": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+            },
+            "risk_controls": {
+                "type": "array",
+                "minItems": 1,
+                "items": { "type": "string", "minLength": 1 }
+            },
+            "evidence_refs": {
+                "type": "object",
+                "required": ["skill_evidence", "risk_evidence"],
+                "properties": {
+                    "skill_evidence": { "type": "string", "minLength": 1 },
+                    "risk_evidence": { "type": "string", "minLength": 1 },
+                    "artifact_version": { "type": ["string", "number"] }
+                },
+                "additionalProperties": true
+            },
             "deliverables": {
                 "type": "array",
                 "items": {

@@ -8,7 +8,7 @@ mod model;
 use crate::engine::{EngineConfig, WorkflowEngine};
 use crate::executor::{CliOpenClawExecutor, MockOpenClawExecutor, OpenClawExecutor};
 use crate::gates::{
-    gate_dispatch_audit_structured, gate_phase2_readiness, gate_pm_dev_qa_approved,
+    gate_artifact_skill_execution, gate_dispatch_audit_structured, gate_phase2_readiness, gate_pm_dev_qa_approved,
     gate_security_or_exception,
 };
 use crate::model::{Role, RoleState, WorkflowContext};
@@ -49,6 +49,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         engine.register_gate(gate_pm_dev_qa_approved);
         engine.register_gate(gate_security_or_exception);
         engine.register_gate(gate_dispatch_audit_structured);
+        engine.register_gate(gate_artifact_skill_execution);
         if week == 6 {
             engine.register_gate(gate_phase2_readiness);
         }
