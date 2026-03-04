@@ -6,8 +6,8 @@
 检查依据：
 - `doc/phase_detailed_execution_blueprint.md`（Phase 1 条款）
 - `doc/ci_release_gate_checklist.md`
-- `doc/phase01/phase1_execution_prompt_pack.md`
-- `doc/phase01/collaboration_runbook.md`
+- `doc/agent_prompts/phase1_execution_prompt_pack.md`
+- `doc/agent_prompts/collaboration_runbook.md`
 
 ---
 

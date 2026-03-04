@@ -3,23 +3,21 @@
 本目录用于把执行蓝图落地为“可直接投喂给 Agent/角色成员”的提示词资产，支撑 `Phase 0 ~ Phase 5` 交付。
 
 ## 目录说明
-- `role_prompt_playbook.md`：角色矩阵 + 角色提示词模板（含执行准确性守卫）
-- `collaboration_runbook.md`：多角色协作机制、交接模板、关卡决策模板（含 Pre-Gate 清单）
-- `phase1_execution_prompt_pack.md`：Phase 1 即用执行包（按周任务拆解 + 责任人 + DoD + Gate 映射 + 角色周度 Prompt）
+- Prompt 资产统一入口：`doc/agent_prompts/README.md`（项目级单一来源）
 - `phase1_min_instruction_set_spec_v1.md`：最小指令集规范 v1.0
 - `phase1_submission_gate_rules_v1.md`：提交闸门规则 v1.0
 - `phase1_review_updates_2026-03-03.md`：Phase 1 回顾与补充更新记录
 
 ## 使用顺序（建议）
-1. 先在 `role_prompt_playbook.md` 选择本阶段启用角色。
+1. 先阅读 `doc/agent_prompts/README.md`，按项目级入口选择对应 Prompt 资产。
 2. 将“通用系统提示词” + “角色专属提示词”组合后投喂给各角色。
-3. 按 `collaboration_runbook.md` 的节奏执行周评审、双周关卡、月度复盘。
+3. 按协作 runbook 的节奏执行周评审、双周关卡、月度复盘。
 4. 每阶段输出附件：`PRD`、`ADR`、`TEST-MATRIX`、`DEPLOY-RUNBOOK`、`GATE-REPORT`。
 
 ## Phase 1 启动方式（即用）
-1. 打开 `phase1_execution_prompt_pack.md`，选择当前周（Week1~Week6）。
-2. 按角色复制对应“周度 Prompt”，结合 `role_prompt_playbook.md` 第2节通用提示词投喂执行。
-3. 按 `collaboration_runbook.md` 执行周评审与双周关卡。
+1. 打开 `doc/agent_prompts/README.md`，进入 Phase 1 对应 Prompt 包。
+2. 按角色复制对应“周度 Prompt”，并组合通用系统提示词投喂执行。
+3. 按 `../agent_prompts/collaboration_runbook.md` 执行周评审与双周关卡。
 4. Week 6 使用门禁官 Prompt 产出 Go/Conditional Go/No-Go 结论。
 
 ## Phase 1 Week 1 已开工包

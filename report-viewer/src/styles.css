@@ -1,0 +1,279 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, Segoe UI, system-ui, sans-serif;
+  background: #0f172a;
+  color: #e2e8f0;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: #0b1220;
+}
+
+.page {
+  padding: 16px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 16px;
+  margin-bottom: 16px;
+}
+
+.header h1 {
+  margin: 0;
+  font-size: 22px;
+}
+
+.header p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+}
+
+.meta {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.meta span {
+  background: #1e293b;
+  border: 1px solid #334155;
+  border-radius: 8px;
+  padding: 6px 10px;
+  font-size: 12px;
+}
+
+.stats {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 12px;
+}
+
+.chip {
+  background: #111827;
+  color: #cbd5e1;
+  border: 1px solid #334155;
+  border-radius: 999px;
+  padding: 6px 12px;
+  cursor: pointer;
+}
+
+.chip.active {
+  border-color: #60a5fa;
+  color: #dbeafe;
+}
+
+.layout {
+  display: grid;
+  grid-template-columns: 1fr 1.2fr 1fr;
+  gap: 12px;
+  height: calc(100vh - 160px);
+}
+
+.panel {
+  background: #111827;
+  border: 1px solid #1f2937;
+  border-radius: 10px;
+  padding: 10px;
+  overflow: auto;
+}
+
+.panel-title {
+  position: sticky;
+  top: 0;
+  background: #111827;
+  margin: -10px -10px 10px;
+  padding: 10px;
+  border-bottom: 1px solid #1f2937;
+  font-weight: 600;
+}
+
+.timeline-item {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #253046;
+  background: #0f172a;
+  color: inherit;
+  border-radius: 8px;
+  padding: 8px;
+  margin-bottom: 8px;
+  cursor: pointer;
+}
+
+.timeline-item:hover {
+  border-color: #3b82f6;
+}
+
+.timeline-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 12px;
+  color: #93c5fd;
+}
+
+.timeline-summary {
+  margin-top: 6px;
+  color: #cbd5e1;
+  font-size: 12px;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.chat-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.chat-message {
+  width: 100%;
+  text-align: left;
+  border: 1px solid #253046;
+  background: #0f172a;
+  color: inherit;
+  border-radius: 10px;
+  padding: 8px;
+  cursor: pointer;
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+}
+
+.chat-message:hover {
+  border-color: #3b82f6;
+}
+
+.chat-message.right {
+  background: #0d1a2c;
+}
+
+.chat-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  background: #1e293b;
+  border: 1px solid #334155;
+  display: grid;
+  place-items: center;
+  font-size: 12px;
+  color: #bfdbfe;
+  flex: 0 0 auto;
+}
+
+.chat-body {
+  min-width: 0;
+  flex: 1;
+}
+
+.chat-meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 6px;
+  font-size: 12px;
+}
+
+.chat-speaker {
+  color: #bfdbfe;
+  font-weight: 600;
+}
+
+.chat-time {
+  color: #94a3b8;
+}
+
+.chat-bubble {
+  background: #111827;
+  border: 1px solid #243041;
+  border-radius: 8px;
+  padding: 8px;
+}
+
+.chat-content {
+  color: #e2e8f0;
+  font-size: 13px;
+  line-height: 1.45;
+  white-space: pre-wrap;
+}
+
+.chat-footer {
+  margin-top: 8px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.chat-mention {
+  color: #93c5fd;
+  font-size: 12px;
+}
+
+.decision-badge {
+  font-size: 11px;
+  border-radius: 999px;
+  padding: 2px 8px;
+  border: 1px solid;
+}
+
+.decision-badge.ok {
+  color: #86efac;
+  border-color: #166534;
+  background: #052e16;
+}
+
+.decision-badge.bad {
+  color: #fca5a5;
+  border-color: #7f1d1d;
+  background: #450a0a;
+}
+
+.detail h3 {
+  margin: 0;
+}
+
+.subtitle {
+  margin-top: 6px;
+  color: #94a3b8;
+}
+
+pre {
+  margin-top: 10px;
+  background: #0b1220;
+  border: 1px solid #243041;
+  border-radius: 8px;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  overflow: auto;
+}
+
+.center {
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  color: #cbd5e1;
+}
+
+.error {
+  text-align: center;
+}
+
+@media (max-width: 1200px) {
+  .layout {
+    grid-template-columns: 1fr;
+    height: auto;
+  }
+}

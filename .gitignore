@@ -1,2 +1,23 @@
-doc/index_files
+# ===== Docs generated assets =====
+doc/index_files/
 doc/index.html
+
+# ===== Runtime outputs =====
+doc/phase01/runtime_artifacts/
+
+# ===== Rust =====
+**/target/
+
+# ===== Node / Vite =====
+**/node_modules/
+**/dist/
+*.tsbuildinfo
+
+# ===== Logs / temp =====
+*.log
+*.tmp
+*.swp
+
+# ===== OS / editor =====
+.DS_Store
+.vscode/
