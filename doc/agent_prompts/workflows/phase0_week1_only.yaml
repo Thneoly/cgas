@@ -1,0 +1,34 @@
+# Phase 0 Week 1 单独执行配置
+
+release_prefix: release-2026-03-05
+deliverables_root: ../doc/phase0
+runtime_artifacts_root: ../doc/phase0/runtime_artifacts
+prompt_pack_fallback_path: ../doc/agent_prompts/phase0_execution_prompt_pack.md
+gate_rules_path: ../doc/phase0/phase0_gate_rules_v1.md
+
+board_headings:
+  - "## 本周目标"
+  - "## 任务表"
+  - "## 角色启动指令"
+  - "## 周末验收清单"
+
+gate_headings:
+  - "## 核心规则"
+  - "## 判定口径"
+  - "## 例外策略"
+  - "## 审计要求"
+
+stages:
+  # Phase 0 Week 1: 契约框架与冻结
+  - id: phase0_week01
+    context_label: Phase0 Week1 - 契约框架定稿
+    week_hint: 1
+    board_path: ../doc/phase0/phase0_week1_execution_board.md
+    gates: [phase0_contract_defined, phase0_stakeholders_approved]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase0_week1_contract_draft_v1.md
+      Dev: phase0_week1_contract_technical_spec.md
+      QA: phase0_week1_replay_set_spec.md
+      Security: phase0_week1_security_baseline.md
+      SRE: phase0_week1_observability_baseline.md

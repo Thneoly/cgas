@@ -1,0 +1,34 @@
+{
+  "decision": "approved",
+  "deliverables": [
+    {
+      "content": "# Security deliverable\n\n- release_id: release-2026-03-05-phase0_week03\n- generated_by: mock-openclaw\n\n上下文说明：\n- 当前阶段：Phase0 Week3 - 回放集构建。\n- 你不需要自行在文件系统查找文档。\n- 以下已提供本地文档摘录，直接基于摘录执行。\n- role 字段必须使用 PM/Dev/QA/Security/SRE 之一。\n- 你必须输出 deliverables: [{path, content}]，path 必须使用给定目标路径。\n\n任务：以 Security 身份输出本周安全审查结论、红线风险与阻断覆盖。\n目标交付路径：phase0_week3_adversarial_samples.md\n\n[phase1_submission_gate_rules 摘录]\n# Phase 0 提交闸门规则 v1.0\n\n## 1. 目标\n\n定义 Phase 0（基线冻结阶段）的门禁规则，确保：\n- 确定性契约完整且可执行\n- 回放集样本量达标且质量合格\n- 门禁报告链路可正常产出\n\n---\n\n## 2. 核心规则\n\n### 2.1 契约定义门禁（phase0_contract_defined）\n\n**检查项**:\n- 契约草案文档已完成\n- 包含必填字段：`program`, `input`, `state_root`, `env_fingerprint`\n- 版本策略明确\n\n**判定**:\n- ✅ 通过：文档完整且字段齐全\n- ❌ 失败：缺少任一必填字段或版本策略\n\n---\n\n### 2.2 利益相关者审批（phase0_stakeholders_approved）\n\n**检查项**:\n- PM 签字确认\n- Dev 签字确认\n- QA 签字确认\n- Security 签字确认（如适用）\n\n**判定**:\n- ✅ 通过：所有必须角色已签字\n- ❌ 失败：任一角色未签字\n\n---\n\n### 2.3 契约冻结门禁（phase0_contract_frozen）\n\n**检查项**:\n- 契约冻结版文档已发布\n- 争议项已收敛或降级为 backlog\n- 变更流程已定义\n\n**判定**:\n- ✅ 通过：冻结版文档发布且变更流程明确\n- ❌ 失败：仍有未收敛的高优先争议项\n\n---\n\n### 2.4 校验器就绪（phase0_validator_ready）\n\n**检查项**:\n- 契约校验器代码已完成\n- 至少 1 个校验脚本可运行\n- 字段覆盖率 = 100%\n\n**判定**:\n- ✅ 通过：校验器可运行且覆盖全部字段\n- ❌ 失败：校验器不可运行或覆盖率 < 100%\n\n---\n\n### 2.5 回放集就绪（phase0_replay_set_ready）\n\n**检查项**:\n- 样本总量 >= 200\n- 覆盖三类样本（正常/边界/对抗）\n- 配比偏差 <= 10%\n\n**判定**:\n- ✅ 通过：样本量达标且分类完整\n- ❌ 失败：样本量 < 200 或分类缺失\n\n---\n\n### 2.6 样本量门禁（phase0_sample_minimum）\n\n**检查项**:\n- 核心回放样本量 >= 200\n- 高危样本量 >= 1000（如适用）\n- 抽检通过率 >= 95%\n\n**判定**:\n- ✅ 通过：样本量达标且质量合格\n- ❌ 失败：样本量不足或抽检不达标\n\n---\n\n### 2.7 门禁报告就绪（phase0_gate_report_ready）\n\n**检查项**:\n- gate-report.json 可正常产出\n- Schema 校验通过率 = 100%\n- 至少覆盖 1 组 PASS 和 1 组 FAIL 示例\n\n**判定**:\n- ✅ 通过：报告可产出且校验通过\n- ❌ 失败：报告无法产出或校验失败\n\n---\n\n### 2.8 CI 集成门禁（phase0_ci_integration）\n\n**检查项**:\n- 门禁规则已集成到 CI 流程\n- pre-merge / nightly / pre-release 触发器已配置\n- 失败时自动创建工单\n\n**判定**:\n- ✅ 通过：CI 集成完成且触发器正常\n- ❌ 失败：CI 未集成或触发器异常\n\n---\n\n## 3. 判定口径\n\n### 3.1 统计窗口\n- 日常监控：最近 7 天滚动窗口\n- 发布门禁：最近 14 天窗口\n\n### 3.2 最小样本量\n- 功能回归（核心场景）：N >= 200\n- 发布门禁（高危相关）：高危样本 N >= 1000\n\n### 3.3 通过判定（三元约束）\n指标必须同时满足：\n1. 目标阈值\n2. 分位约束（P95/P99）\n3. 红线零违规\n\n### 3.4 连续达标时长\n用于阶段放行的红线指标，需在最近 14 天内连续通过 2 次双周关卡\n\n---\n\n## 4. 例外策略\n\n### 4.1 例外审批流程\n\n1. **申请**: 责任人提交例外申请，说明原因与补偿控制\n2. **评审**: PM + Security + QA 联合评审\n3. **批准**: 所有评审人签字批准\n4. **跟踪**: 例外项纳入风险台账，定期跟踪\n\n### 4.2 例外有效期\n- 默认有效期：7 天\n- 最长有效期：14 天\n- 到期必须修复或重新申请\n\n### 4.3 补偿控制\n例外批准时必须定义补偿控制措施，例如：\n- 增加人工审查\n- 提高抽检比例\n- 限制发布范围\n\n---\n\n## 5. 审计要求\n\n### 5.1 必须记录的审计事件\n- 门禁检查结果（通过/失败）\n- 例外审批记录\n- 指标数据来源\n- 评审人签字\n\n### 5.2 审计字段\n每条审计记录必须包含：\n- `event_id`: 事件唯一标识\n- `event_type`: 事件类型\n- `timestamp`: 时间戳\n- `actor`: 操作者\n- `evidence_refs`: 证据引用\n\n### 5.3 审计存储\n- 存储介质：不可变存储（WORM）\n- 保留期限：至少 180 天\n- 可追溯性：支持按 release_id 查询\n\n---\n\n## 6. 门禁触发后的处置\n\n### 6.1 自动动作\n\n| 门禁失败 | 自动动作 |\n|----------|----------|\n| phase0_contract_defined | 阻断进入 Week 2 |\n| phase0_stakeholders_approved | 阻断契约冻结 |\n| phase0_replay_set_ready | 阻断回放集构建 |\n| phase0_sample_minimum | 阻断门禁链路打通 |\n| phase0_gate_report_ready | 阻断 Phase 0 收官 |\n\n### 6.2 恢复条件\n\n| 门禁失败 | 恢复条件 |\n|----------|----------|\n| phase0_contract_defined | 补充缺失字段并重新评审 |\n| phase0_stakeh\n\n[协作上下文]\n当前轮次: 1\n你必须吸收以下跨角色反馈并在本轮输出里体现闭环：\n- 来自QA: decision=approved, summary=QA executed prompt ",
+      "path": "phase0_week3_adversarial_samples.md"
+    }
+  ],
+  "evidence": {
+    "metric_value": 0.98,
+    "sample_size": 120,
+    "source": "mock-openclaw",
+    "window": "14d"
+  },
+  "evidence_refs": {
+    "artifact_version": "v2",
+    "risk_evidence": "gate_rules_v1",
+    "skill_evidence": "prompt_contract_v2"
+  },
+  "next_role": "SRE",
+  "prompt_hash": "len:5345",
+  "release_id": "release-2026-03-05-phase0_week03",
+  "risk_controls": [
+    "gate_alignment",
+    "evidence_traceability"
+  ],
+  "role": "Security",
+  "round": 1,
+  "skills_applied": [
+    "pmp_baseline",
+    "security_role_skill"
+  ],
+  "summary": "Security executed prompt"
+}

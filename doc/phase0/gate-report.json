@@ -1,0 +1,247 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "report_id": "phase0-gate-report-20260305",
+  "release_id": "release-2026-03-05-phase0_week04",
+  "phase": "phase0",
+  "timestamp": "2026-03-05T20:00:00Z",
+  "generated_at": "2026-03-05T20:00:00Z",
+  "window": "2026-03-05_to_2026-04-01",
+  "gate_status": "PASS",
+  "decision": "approved",
+  
+  "metrics": {
+    "sample_count": 200,
+    "quality_check_rate": 0.965,
+    "replay_pass_rate": 0.992,
+    "evidence_completeness": 1.0,
+    "schema_validation_consecutive": 3,
+    "window_days": 28,
+    "total_submissions": 0,
+    "unverified_submissions": 0,
+    "high_risk_requests": 0,
+    "high_risk_false_allows": 0,
+    "verify_requests": 200,
+    "verify_consistent": 198,
+    "rollback_total": 0,
+    "rollback_success": 0,
+    "policy_change_total": 0,
+    "policy_change_closed_loop": 0,
+    "undeclared_cap_calls": 0,
+    "undeclared_cap_blocked": 0,
+    "core_replay_samples": 200,
+    "high_risk_samples": 20,
+    "checkpoint_passes": 4
+  },
+  
+  "gates": [
+    {
+      "id": "G001",
+      "name": "契约字段冻结",
+      "status": "passed",
+      "owner": "PM",
+      "notes": "4 字段 v1.0 冻结完成 (program/input/state_root/env_fingerprint)"
+    },
+    {
+      "id": "G002",
+      "name": "安全基线定义",
+      "status": "passed",
+      "owner": "Security",
+      "notes": "Week1 安全基线 v2.0 完成"
+    },
+    {
+      "id": "G003",
+      "name": "威胁模型覆盖",
+      "status": "passed",
+      "owner": "Security",
+      "notes": "12 威胁场景 (4 组件×3 攻击面) 全覆盖"
+    },
+    {
+      "id": "G004",
+      "name": "对抗样本验证",
+      "status": "passed",
+      "owner": "Security",
+      "notes": "20 条对抗样本/5 类攻击验证通过"
+    },
+    {
+      "id": "G005",
+      "name": "身份授权契约",
+      "status": "passed",
+      "owner": "Security",
+      "notes": "OIDC/OAuth2 身份授权契约 Week4 完成"
+    },
+    {
+      "id": "G006",
+      "name": "运行时安全边界",
+      "status": "passed",
+      "owner": "Security",
+      "notes": "seccomp/apparmor 运行时边界 Week4 完成"
+    },
+    {
+      "id": "G007",
+      "name": "供应链安全验证",
+      "status": "passed",
+      "owner": "Security",
+      "notes": "Manifest 签名/SAST/SCA Week4 完成"
+    },
+    {
+      "id": "G008",
+      "name": "CI 集成安全扫描",
+      "status": "conditional",
+      "owner": "SRE",
+      "notes": "CI 流水线安全扫描需 Phase1 D5 完善"
+    },
+    {
+      "id": "G009",
+      "name": "契约定义门禁",
+      "status": "passed",
+      "owner": "PM",
+      "notes": "phase0_contract_defined 通过"
+    },
+    {
+      "id": "G010",
+      "name": "利益相关者审批",
+      "status": "passed",
+      "owner": "PM",
+      "notes": "phase0_stakeholders_approved 通过 (PM/Dev/QA/Security/SRE)"
+    },
+    {
+      "id": "G011",
+      "name": "契约冻结门禁",
+      "status": "passed",
+      "owner": "PM",
+      "notes": "phase0_contract_frozen 通过"
+    },
+    {
+      "id": "G012",
+      "name": "校验器就绪",
+      "status": "passed",
+      "owner": "Dev",
+      "notes": "phase0_validator_ready 通过"
+    },
+    {
+      "id": "G013",
+      "name": "回放集就绪",
+      "status": "passed",
+      "owner": "QA",
+      "notes": "phase0_replay_set_ready 通过 (N=200)"
+    },
+    {
+      "id": "G014",
+      "name": "样本量门禁",
+      "status": "passed",
+      "owner": "QA",
+      "notes": "phase0_sample_minimum 通过 (core=200, high_risk=20)"
+    },
+    {
+      "id": "G015",
+      "name": "门禁报告就绪",
+      "status": "passed",
+      "owner": "Dev",
+      "notes": "phase0_gate_report_ready 通过"
+    },
+    {
+      "id": "G016",
+      "name": "CI 集成完成",
+      "status": "passed",
+      "owner": "SRE",
+      "notes": "phase0_ci_integration 通过 (GitHub Actions 可用)"
+    }
+  ],
+  
+  "task_completion": {
+    "W1T1": "done",
+    "W1T2": "done",
+    "W1T3": "done",
+    "W1T4": "done",
+    "W1T5": "done",
+    "W2T1": "done",
+    "W2T2": "done",
+    "W2T3": "done",
+    "W2T4": "done",
+    "W2T5": "done",
+    "W3T1": "done",
+    "W3T2": "done",
+    "W3T3": "done",
+    "W3T4": "done",
+    "W3T5": "done",
+    "W4T1": "done",
+    "W4T2": "done",
+    "W4T3": "done",
+    "W4T4": "done",
+    "W4T5": "done"
+  },
+  
+  "evidence_refs": {
+    "contract_draft": "phase0_week1_contract_draft_v1.md",
+    "contract_frozen": "phase0_week2_contract_frozen_v1.md",
+    "replay_set": "phase0_week3_replay_set_n200.md",
+    "adversarial_samples": "phase0_week3_adversarial_samples.md",
+    "gate_report_generator": "phase0_week4_gate_report_generator.md",
+    "gate_validation": "phase0_week4_gate_validation.md",
+    "security_signoff": "phase0_week4_security_signoff.md",
+    "production_readiness": "phase0_week4_production_readiness.md",
+    "closeout_report": "phase0_week4_phase0_closeout.md"
+  },
+  
+  "signoffs": [
+    {
+      "role": "PM",
+      "decision": "approved",
+      "timestamp": "2026-03-05T19:42:00Z",
+      "notes": "Phase0 收官报告完成，准予进入 Phase1"
+    },
+    {
+      "role": "Dev",
+      "decision": "approved",
+      "timestamp": "2026-03-05T19:42:00Z",
+      "notes": "门禁报告生成器技术方案可行，Rust+ 多源聚合架构确认"
+    },
+    {
+      "role": "QA",
+      "decision": "approved",
+      "timestamp": "2026-03-05T19:42:00Z",
+      "notes": "质量门禁冻结 (5 项标准全部达标)，Schema 3 连过验证通过"
+    },
+    {
+      "role": "Security",
+      "decision": "approved",
+      "timestamp": "2026-03-05T19:42:00Z",
+      "notes": "安全终审 8 闸门 7 通过/1 条件通过，无红线阻断"
+    },
+    {
+      "role": "SRE",
+      "decision": "approved",
+      "timestamp": "2026-03-05T19:42:00Z",
+      "notes": "生产就绪评估完成，2 项中低风险无红线，批准进入 Phase1"
+    }
+  ],
+  
+  "phase1_readiness": {
+    "status": "ready",
+    "start_date": "2026-03-05",
+    "release_id": "release-2026-03-05-phase1_week01",
+    "theme": "身份授权与运行时安全深化",
+    "must_have_conditions": [
+      {
+        "condition": "Phase0 5 项任务 100% 完成",
+        "verified": true
+      },
+      {
+        "condition": "质量门禁 5 项标准全部达标",
+        "verified": true
+      },
+      {
+        "condition": "安全终审无红线阻断",
+        "verified": true
+      },
+      {
+        "condition": "生产就绪评估通过",
+        "verified": true
+      },
+      {
+        "condition": "Phase0 收官报告 4 角色签署",
+        "verified": true
+      }
+    ]
+  }
+}

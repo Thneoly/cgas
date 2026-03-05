@@ -1,0 +1,53 @@
+{
+  "blackboard_version": 1,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 1,
+    "sample_size": 1,
+    "source": "blackboard-agent",
+    "window": "round-1"
+  },
+  "next_role": "Dev",
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# Phase0 Week1 契约框架草案 (v0.1 - 评审中)\n\n**Release ID:** release-2026-03-05-phase0_week01  \n**角色:** PM  \n**状态:** 🔄 评审中 - 待跨角色反馈  \n**日期:** 2026-03-05  \n**轮次:** Round 1 (初稿输出)\n\n---\n\n## 一、本周执行结论\n\n### 1.1 目标达成情况\n\n| 目标 | 状态 | 完成度 | 备注 |\n|------|------|--------|------|\n| 冻结确定性契约字段 | 🔄 初稿完成 | 80% | 待Dev技术确认 |\n| 定义最小可运行链路 | 🔄 初稿完成 | 80% | 待SRE健康检查点定义 |\n| 定义黄金回放集结构 | 🔄 初稿完成 | 80% | 待QA+Security评审 |\n\n### 1.2 任务完成情况\n\n| ID | 任务 | 负责人 | 优先级 | 状态 | 备注 |\n|----|------|--------|--------|------|------|\n| W1T1 | 契约字段定义与争议评审 | PM+Dev | P0 | 🔄 In Review | PM初稿完成，待Dev确认 |\n| W1T2 | 契约冻结并签署 | PM | P0 | ⏳ Pending | 等待W1T1完成 |\n| W1T3 | 回放集结构设计 | QA | P0 | ⏳ Awaiting Input | 待QA输入 |\n| W1T4 | 环境指纹采集规范 | SRE | P1 | ⏳ Awaiting Input | 待SRE输入 |\n| W1T5 | 安全基线定义 | Security | P1 | ⏳ Awaiting Input | 待Security输入 |\n\n### 1.3 本周输出\n\n- ✅ 契约字段初稿定义完成\n- ✅ 最小可运行链路架构设计完成\n- ✅ 黄金回放集结构框架完成\n- ⏳ 等待各角色评审反馈 (Round 2闭环)\n\n---\n\n## 二、契约字段定义 (初稿)\n\n### 2.1 拟冻结字段\n\n```json\n{\n  \"program\": \"string (required) - 程序标识符，SHA256哈希\",\n  \"input\": \"object (required) - 输入参数集，JSON Schema验证\",\n  \"state_root\": \"string (required) - 状态树根哈希，Merkle Proof\",\n  \"env_fingerprint\": \"string (required) - 环境指纹，包含OS/Node/依赖版本\"\n}\n```\n\n### 2.2 字段详细说明\n\n| 字段 | 类型 | 必填 | 说明 | 验证方式 | 负责人 |\n|------|------|------|------|----------|--------|\n| `program` | string | ✅ | 程序标识符，SHA256哈希 | 哈希格式校验 | PM+Dev |\n| `input` | object | ✅ | 输入参数集 | JSON Schema验证 | PM+Dev |\n| `state_root` | string | ✅ | 状态树根哈希，Merkle Proof | Merkle Proof验证 | PM+Dev |\n| `env_fingerprint` | string | ✅ | 环境指纹 | OS/Node/依赖版本采集 | SRE |\n\n### 2.3 争议处理机制 (建议)\n\n- **争议窗口:** 48小时 (自本草案发布起)\n- **争议提交:** 通过execution_board issue提交\n- **裁决机制:** PM+Dev联合评审，Security具有一票否决权\n- **冻结生效:** 无争议或争议解决后自动冻结\n\n### 2.4 非目标项 (Out of Scope)\n\n- ❌ 动态契约字段扩展 (Phase1考虑)\n- ❌ 多版本契约兼容 (Phase1考虑)\n- ❌ 跨链状态验证 (Phase2考虑)\n\n---\n\n## 三、最小可运行链路定义 (初稿)\n\n### 3.1 链路架构\n\n```\n┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐\n│   Gateway   │ →  │  Executor   │ →  │  Verifier   │ →  │  Committer  │\n│  任务提交    │    │  契约执行    │    │  结果验证    │    │  状态提交    │\n└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘\n```\n\n### 3.2 各节点职责 (初稿)\n\n| 节点 | 职责 | 输入 | 输出 | 验收标准 (待SRE确认) |\n|------|------|------|------|----------|\n| Gateway | 任务接收与路由 | HTTP/gRPC请求 | 任务ID + 队列确认 | 响应时间<100ms |\n| Executor | 契约执行 | 任务ID + 契约 | 执行结果 + 证明 | 执行成功率>99% |\n| Verifier | 结果验证 | 执行结果 + 证明 | 验证通过/失败 | 验证准确率100% |\n| Committer | 状态提交 | 验证通过结果 | 状态根更新 | 提交延迟<1s |\n\n### 3.3 待SRE输入\n\n- [ ] 健康检查点定义\n- [ ] SLO指标目标值\n- [ ] 监控告警策略\n- [ ] 环境指纹采集规范 (W1T4)\n\n---\n\n## 四、黄金回放集结构 (初稿)\n\n### 4.1 建议样本配比\n\n| 类型 | 占比 | 说明 | 待确认 |\n|------|------|------|--------|\n| 正常样本 | 70% | 标准执行路径 | QA确认 |\n| 边界样本 | 20% | 极限值/空值/最大值 | QA确认 |\n| 对抗样本 | 10% | 恶意输入/异常场景 | Security确认 |\n\n### 4.2 标注规范框架\n\n```yaml\nsample:\n  id: string          # 唯一标识\n  type: normal|boundary|adversarial\n  input: object       # 输入数据\n  expected_output: object  # 期望输出\n  metadata:\n    created_at: timestamp\n    author: string\n    tags: [string]\n```\n\n### 4.3 待QA输入 (W1T3)\n\n- [ ] 样本配比确认\n- [ ] 标注规范完善\n- [ ] 样本门禁标准定义\n- [ ] 最小样本集数量\n\n### 4.4 待Security输入 (W1T5)\n\n- [ ] 对抗样本审核标准\n- [ ] 安全基线定义\n- [ ] 安全审计要求\n\n---\n\n## 五、风险初步识别\n\n### 5.1 已识别风险\n\n| 风险ID | 描述 | 影响 | 概率 | 缓解措施 (建议) | 责任人 |\n|--------|------|------|------|----------------|--------|\n| R001 | W1T4/W1T5依赖角色输入延迟 | 高 | 中 | 设置升级路径，48h无响应升级 | PM |\n| R002 | 契约字段争议未及时解决 | 高 | 低 | 48h争议窗口，超时自动冻结 | PM+Dev |\n| R003 | 回放集样本质量不足 | 中 | 中 | QA+Security联合评审 | QA+Security |\n\n### 5.2 待各角色补充风险\n\n- [ ] Dev: 技术实现风险\n- [ ] QA: 测试覆盖风险\n- [ ] Security: 安全合规风险\n- [ ] SRE: 运维稳定性风险\n\n---\n\n## 六、下周准入条件 (Gate Criteria - 初稿)\n\n### 6.1 必须满足条件 (Must Have)\n\n- [ ] W1T1契约字段争议评审完成 (Dev确认)\n- [ ] W1T2契约正式签署 (PM+Dev签字)\n- [ ] W1T4环境指纹规范初稿完成 (SRE)\n- [ ] W1T5安全基线定义初稿完成 (Security)\n\n### 6.2 期望满足条件 (Should Have)\n\n- [ ] 最小可运行链路原型搭建完成\n- [ ] 黄金回放集样本采集完成50%\n\n### 6.3 Gate决策标准 (建议)\n\n| 条件满足数 | 决策 | 说明 |\n|------------|------|------|\n| 4/4 Must Have | ✅ Approved | 进入Phase0 Week2 |\n| 3/4 Must Have | ⚠️ Conditional Go | 需制定补救计划 |\n| <3/4 Must Have | ❌ No Go | 延长Week1或重新规划 |\n\n---\n\n## 七、跨角色交接请求\n\n### 7.1 交接给Dev (Next Role)\n\n**任务:** W1T1契约字段技术评审  \n**输入:** 本契约草案  \n**输出:** 技术可行性确认/修改建议  \n**截止时间:** 48小时内  \n**问题:**\n1. 契约字段定义是否满足技术实现需求？\n2. 序列化方案建议 (serde/protobuf/其他)？\n3. 协议方案建议 (gRPC/REST/双协议)？\n\n### 7.2 请求QA输入\n\n**任务:** W1T3回放集结构设计  \n**要求:** 确认样本配比、标注规范、门禁标准  \n**格式:** Markdown规范文档  \n**截止时间:** 48小时内\n\n### 7.3 请求SRE输入\n\n**任务:** W1T4环境指纹采集规范  \n**要求:** 提供OS/Node/依赖版本采集方案、SLO定义  \n**格式:** Markdown规范文档  \n**截止时间:** 48小时内\n\n### 7.4 请求Security输入\n\n**任务:** W1T5安全基线定义  \n**要求:** 提供安全验证项清单、审计要求  \n**格式:** Checklist + 验证方法  \n**截止时间:** 48小时内\n\n---\n\n## 八、附录\n\n### 8.1 技能应用说明\n\n- PMP范围管理: 用于契约字段冻结与非目标项定义\n- PfMP治理: 用于Gate准入条件设计\n- PgMP依赖统筹: 用于跨角色任务协调\n- 风险收敛: 用于风险初步识别与缓解措施制定\n\n### 8.2 文档版本历史\n\n| 版本 | 日期 | 作者 | 变更说明 |\n|------|------|------|----------|\n| v0.1 | 2026-03-05 | PM | Round 1初稿，待跨角色反馈 |\n\n### 8.3 待签署栏 (Round 2完成后填写)\n\n| 角色 | 姓名 | 日期 | 签名 | 状态 |\n|------|------|------|------|------|\n| PM | | | | ⏳ Pending |\n| Dev | | | | ⏳ Pending |\n| QA | | | | ⏳ Pending |\n| Security | | | | ⏳ Pending |\n| SRE | | | | ⏳ Pending |\n\n---\n\n**请各角色评审后提供反馈，Round 2完成闭环。**\n",
+        "path": "phase0_week1_contract_draft_v1.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": 0.4,
+      "sample_size": 5,
+      "source": "execution_board task completion rate (2/5 P0 tasks drafted)",
+      "window": "week1"
+    },
+    "evidence_refs": {
+      "risk_evidence": "3项任务存在角色依赖风险(W1T3/W1T4/W1T5)，已设置评审窗口和升级路径控制",
+      "skill_evidence": "PMP契约管理最佳实践应用于W1T1/W1T2任务分解与字段定义，PfMP治理框架用于Gate准入条件初步设计"
+    },
+    "next_role": "Dev",
+    "release_id": "release-2026-03-05-phase0_week01",
+    "risk_controls": [
+      "契约字段设置48小时争议评审窗口",
+      "非目标项明确列入out-of-scope清单避免范围蔓延",
+      "P1任务(W1T4/W1T5)设置角色依赖升级路径",
+      "黄金回放集配比需QA+Security联合评审确认",
+      "环境指纹规范依赖SRE提供基线数据后冻结"
+    ],
+    "role": "PM",
+    "skills_applied": [
+      "PMP范围管理与契约字段定义",
+      "PfMP治理框架与Gate条件设计",
+      "PgMP跨角色依赖识别与统筹",
+      "风险初步识别与管控措施定义",
+      "可交接文档结构化输出"
+    ],
+    "summary": "Phase0 Week1 契约框架初稿完成。4个确定性契约字段已定义(program/input/state_root/env_fingerprint)，最小可运行链路架构已设计(Gateway→Executor→Verifier→Committer)，黄金回放集结构已规划(70/20/10配比)。5项任务中W1T1/W1T2由PM主导完成初稿，W1T3/W1T4/W1T5待QA/SRE/Security输入。本周输出可交接草案，邀请各角色评审反馈。"
+  },
+  "release_id": "release-2026-03-05-phase0_week01",
+  "role": "Blackboard",
+  "source_role": "PM",
+  "summary": "blackboard merged artifact from PM and broadcast feedback"
+}

@@ -1,0 +1,54 @@
+{
+  "blackboard_version": 1,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 1,
+    "sample_size": 1,
+    "source": "blackboard-agent",
+    "window": "round-1"
+  },
+  "next_role": "Dev",
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# Phase0 Week2 契约冻结草案 (v0.1 - 评审中)\n\n**Release ID:** release-2026-03-05-phase0_week02  \n**角色:** PM  \n**状态:** 🔄 评审中 - 待跨角色反馈  \n**日期:** 2026-03-05  \n**轮次:** Round 1 (初稿输出)\n\n---\n\n## 一、本周执行结论\n\n### 1.1 目标达成情况\n\n| 目标 | 状态 | 完成度 | 备注 |\n|------|------|--------|------|\n| 契约冻结 | 🔄 初稿完成 | 60% | 待争议项收敛 |\n| 校验器实现 | ⏳ 待启动 | 0% | 待Dev输入 |\n| 验证矩阵 | 🔄 框架完成 | 40% | 待QA+Security评审 |\n\n### 1.2 任务完成情况\n\n| ID | 任务 | 负责人 | 优先级 | 状态 | 备注 |\n|----|------|--------|--------|------|------|\n| W2T1 | 争议项收敛与冻结 | PM | P0 | 🔄 In Review | PM初稿完成，待各角色确认 |\n| W2T2 | 契约校验器实现 | Dev | P0 | ⏳ Awaiting Input | 待Dev技术方案 |\n| W2T3 | 验证矩阵定义 | QA | P0 | 🔄 Draft | 框架完成，待QA完善 |\n| W2T4 | 威胁模型更新 | Security | P1 | ⏳ Awaiting Input | 待Security输入 |\n| W2T5 | 部署基线定义 | SRE | P1 | ⏳ Awaiting Input | 待SRE输入 |\n\n### 1.3 Week1 回顾与Week2 衔接\n\n| Week1 交付物 | Week2 状态 | 验证 |\n|--------------|------------|------|\n| 契约字段冻结 (4字段) | ✅ 延续 | program/input/state_root/env_fingerprint |\n| 最小可运行链路 | ✅ 延续 | Gateway→Executor→Verifier→Committer |\n| 黄金回放集 (150条) | 🔄 采集中 | Week1 结束 0/150，Week2 目标≥30条 |\n| 安全审计要求 (5.1-5.3) | ✅ 延续 | 纳入契约框架 |\n| SLO定义 (4个) | ✅ 延续 | 可用性≥99%/延迟P99≤100ms/错误率≤0.1%/恢复≤5m |\n\n---\n\n## 二、契约冻结流程\n\n### 2.1 冻结条件\n\n| 条件 | 类型 | 验证方法 | 责任人 |\n|------|------|----------|--------|\n| 争议项全部收敛 | Must Have | 争议台账清零 | PM |\n| Dev校验器实现完成 | Must Have | 代码Review+单元测试 | Dev |\n| QA验证矩阵评审通过 | Must Have | 测试用例评审记录 | QA |\n| Security威胁模型更新 | Should Have | 安全审查报告 | Security |\n| SRE部署基线定义 | Should Have | 部署文档 | SRE |\n\n### 2.2 争议项管理\n\n#### 2.2.1 争议来源 (来自Week1)\n\n| 争议ID | 描述 | 影响字段 | 状态 | 负责人 |\n|--------|------|----------|------|--------|\n| D001 | env_fingerprint采集粒度 | env_fingerprint | 🔄 Open | SRE |\n| D002 | 对抗样本安全验证覆盖 | input | 🔄 Open | Security |\n| D003 | 序列化性能开销 | program | 🔄 Open | Dev |\n\n#### 2.2.2 收敛机制\n\n- **收敛窗口:** 72小时 (自本草案发布起)\n- **评审频率:** 每日站会同步进度\n- **升级路径:** 48小时无进展→PM升级，72小时→项目发起人\n- **冻结生效:** 争议台账清零后自动冻结\n\n### 2.3 冻结版本管理\n\n```yaml\ncontract_version:\n  major: 0\n  minor: 1\n  patch: 0\n  status: frozen|draft|deprecated\n  frozen_at: timestamp\n  change_log:\n    - version: 0.1.0\n      date: 2026-03-05\n      changes:\n        - \"Initial frozen version\"\n```\n\n---\n\n## 三、契约校验器规范 (待Dev确认)\n\n### 3.1 校验器架构\n\n```\n┌─────────────────────────────────────────────────────────┐\n│                   Contract Validator                     │\n├─────────────────────────────────────────────────────────┤\n│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐     │\n│  │   Schema    │  │   Business  │  │   Security  │     │\n│  │  Validator  │  │   Rules     │  │   Checks    │     │\n│  └─────────────┘  └─────────────┘  └─────────────┘     │\n├─────────────────────────────────────────────────────────┤\n│                    Output: Valid/Invalid + Errors        │\n└─────────────────────────────────────────────────────────┘\n```\n\n### 3.2 校验字段\n\n| 字段 | 校验类型 | 校验规则 | 错误码 |\n|------|----------|----------|--------|\n| program | Schema | SHA256格式校验 | ERR_PROG_001 |\n| input | Schema+Business | JSON Schema验证+业务规则 | ERR_INP_001~099 |\n| state_root | Schema | Merkle Root格式校验 | ERR_STATE_001 |\n| env_fingerprint | Schema+Business | 指纹格式+采集源验证 | ERR_ENV_001~099 |\n\n### 3.3 待Dev输入 (W2T2)\n\n- [ ] 校验器技术选型 (Rust/TypeScript/其他)\n- [ ] 接口定义 (gRPC/REST)\n- [ ] 性能目标 (P99延迟)\n- [ ] 错误码规范\n- [ ] 单元测试覆盖率目标\n\n---\n\n## 四、验证矩阵框架 (待QA完善)\n\n### 4.1 验证维度\n\n| 维度 | 说明 | 用例数 (预估) |\n|------|------|---------------|\n| 字段校验 | 4个契约字段单独验证 | 20 |\n| 组合校验 | 字段组合场景验证 | 15 |\n| 边界校验 | 极限值/空值/最大值 | 15 |\n| 安全校验 | 对抗样本+审计要求 | 10 |\n| 性能校验 | 延迟/吞吐量验证 | 5 |\n| **合计** | | **65** |\n\n### 4.2 测试用例结构\n\n```yaml\ntest_case:\n  id: string          # 唯一标识 (e.g., TC_W2T3_001)\n  name: string        # 用例名称\n  type: schema|business|security|performance\n  input:\n    contract: object  # 契约输入\n  expected:\n    valid: boolean    # 期望是否有效\n    errors: [string]  # 期望错误码 (如无效)\n  metadata:\n    priority: P0|P1|P2\n    owner: string\n    status: draft|ready|executed|passed|failed\n```\n\n### 4.3 待QA输入 (W2T3)\n\n- [ ] 测试用例详细设计 (65条)\n- [ ] 自动化测试框架选型\n- [ ] 测试执行环境定义\n- [ ] 通过率门禁标准\n\n---\n\n## 五、威胁模型更新框架 (待Security输入)\n\n### 5.1 Week1 安全基线回顾\n\n| 要求 | 说明 | Week2 状态 |\n|------|------|------------|\n| 5.1 操作审计日志 | 所有契约操作可追溯 | ✅ 延续 |\n| 5.2 契约变更追溯链 | 版本变更历史完整 | ✅ 延续 |\n| 5.3 环境指纹不可篡改 | 指纹哈希链验证 | 🔄 待验证 |\n\n### 5.2 Week2 新增威胁场景\n\n| 威胁ID | 描述 | 影响 | 缓解措施 (建议) | 待确认 |\n|--------|------|------|----------------|----------|\n| T001 | 校验器绕过攻击 | 高 | 多重校验+审计日志 | Security |\n| T002 | 重放攻击 | 高 | nonce+时间戳验证 | Security |\n| T003 | 指纹伪造 | 中 | 硬件绑定+远程证明 | Security |\n\n### 5.3 待Security输入 (W2T4)\n\n- [ ] 威胁模型详细分析 (STRIDE/DREAD)\n- [ ] 新增威胁场景确认\n- [ ] 缓解措施技术可行性评估\n- [ ] 安全测试用例补充\n\n---\n\n## 六、部署基线框架 (待SRE输入)\n\n### 6.1 部署环境定义\n\n| 环境 | 用途 | 待确认 |\n|------|------|--------|\n| Dev | 开发测试 | SRE确认 |\n| Staging | 预发布验证 | SRE确认 |\n| Prod | 生产环境 | SRE确认 |\n\n### 6.2 部署检查清单\n\n- [ ] 契约校验器容器镜像构建\n- [ ] 配置管理 (ConfigMap/Secrets)\n- [ ] 健康检查端点定义\n- [ ] 监控告警集成\n- [ ] 回滚策略定义\n\n### 6.3 待SRE输入 (W2T5)\n\n- [ ] 部署架构设计\n- [ ] 资源配置 (CPU/Memory)\n- [ ] 扩缩容策略\n- [ ] 灾备方案\n\n---\n\n## 七、风险识别\n\n### 7.1 已识别风险\n\n| 风险ID | 描述 | 影响 | 概率 | 缓解措施 | 责任人 |\n|--------|------|------|------|----------|--------|\n| R001 | 争议项收敛延迟 | 高 | 中 | 72小时收敛窗口，升级机制 | PM |\n| R002 | 校验器实现复杂度高 | 高 | 中 | Dev早期技术方案评审 | Dev |\n| R003 | 验证矩阵覆盖不足 | 中 | 中 | QA+Security联合评审 | QA+Security |\n| R004 | 威胁模型更新遗漏关键场景 | 高 | 低 | Security主导，多角色评审 | Security |\n| R005 | 部署基线定义延迟 | 中 | 低 | SRE优先定义核心检查项 | SRE |\n\n### 7.2 风险收敛状态\n\n- **高风险:** 2项 (R001, R002) - 已制定缓解措施\n- **中风险:** 2项 (R003, R005) - 监控中\n- **低风险:** 1项 (R004) - 监控中\n- **红线阻断:** 0项\n\n---\n\n## 八、Week3 准入条件 (Gate Criteria - 初稿)\n\n### 8.1 必须满足条件 (Must Have)\n\n| 条件 | 验证方法 | 责任人 |\n|------|----------|--------|\n| 契约正式冻结 (争议台账清零) | 争议台账记录 | PM |\n| 校验器实现完成 (单元测试通过) | 代码Review+测试报告 | Dev |\n| 验证矩阵评审通过 (65条用例) | 评审记录 | QA |\n\n### 8.2 期望满足条件 (Should Have)\n\n| 条件 | 验证方法 | 责任人 |\n|------|----------|--------|\n| 威胁模型更新完成 | 安全审查报告 | Security |\n| 部署基线定义完成 | 部署文档 | SRE |\n\n### 8.3 Gate决策标准\n\n| 条件满足数 | 决策 | 说明 |\n|------------|------|------|\n| 3/3 Must Have | ✅ Approved | 进入Phase0 Week3 |\n| 2/3 Must Have | ⚠️ Conditional Go | 需制定补救计划，48h内完成 |\n| <2/3 Must Have | ❌ No Go | 延长Week2或重新规划 |\n\n---\n\n## 九、跨角色交接请求\n\n### 9.1 交接给Dev (Next Role)\n\n**任务:** W2T2契约校验器实现  \n**输入:** 本契约冻结草案+校验器规范框架  \n**输出:** 校验器代码+单元测试+技术文档  \n**截止时间:** 72小时内  \n**问题:**\n1. 校验器技术选型建议 (Rust/TypeScript/其他)?\n2. 接口协议建议 (gRPC/REST)?\n3. 性能目标建议 (P99延迟)?\n4. 错误码规范建议?\n\n### 9.2 请求QA输入\n\n**任务:** W2T3验证矩阵定义  \n**要求:** 65条测试用例详细设计，自动化测试框架选型  \n**格式:** Markdown+测试用例YAML  \n**截止时间:** 72小时内\n\n### 9.3 请求Security输入\n\n**任务:** W2T4威胁模型更新  \n**要求:** 威胁分析(STRIDE/DREAD)+新增威胁场景+缓解措施  \n**格式:** 安全审查报告  \n**截止时间:** 72小时内\n\n### 9.4 请求SRE输入\n\n**任务:** W2T5部署基线定义  \n**要求:** 部署架构+资源配置+扩缩容策略+灾备方案  \n**格式:** 部署文档  \n**截止时间:** 72小时内\n\n---\n\n## 十、附录\n\n### 10.1 技能应用说明\n\n- **PMP范围管理:** 用于争议项收敛与契约冻结流程设计\n- **PfMP治理:** 用于Week3 Gate准入条件设计\n- **PgMP依赖统筹:** 用于跨角色任务协调\n- **风险收敛:** 用于风险识别与缓解措施制定(5项风险台账)\n- **契约冻结流程设计:** 用于版本管理与变更控制\n\n### 10.2 文档版本历史\n\n| 版本 | 日期 | 作者 | 变更说明 |\n|------|------|------|----------|\n| v0.1 | 2026-03-05 | PM | Round 1初稿，待跨角色反馈 |\n\n### 10.3 待签署栏 (Round 2完成后填写)\n\n| 角色 | 姓名 | 日期 | 签名 | 状态 |\n|------|------|------|------|------|\n| PM | | | | ⏳ Pending |\n| Dev | | | | ⏳ Pending |\n| QA | | | | ⏳ Pending |\n| Security | | | | ⏳ Pending |\n| SRE | | | | ⏳ Pending |\n\n---\n\n**请各角色评审后提供反馈，Round 2完成闭环。**\n\n**Week2 关键里程碑:**\n- D1: 本草案发布，各角色启动评审\n- D3: 各角色反馈完成，Round 2闭环\n- D5: 契约正式冻结，校验器实现完成\n",
+        "path": "phase0_week2_contract_frozen_v1.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": 0.2,
+      "sample_size": 5,
+      "source": "execution_board task completion rate (1/5 P0 tasks drafted, awaiting cross-role input)",
+      "window": "week2"
+    },
+    "evidence_refs": {
+      "risk_evidence": "4项任务存在角色依赖风险(W2T2/W2T3/W2T4/W2T5)，已设置评审窗口和升级路径控制",
+      "skill_evidence": "PMP争议管理最佳实践应用于W2T1任务分解，PfMP治理框架用于契约冻结Gate条件设计"
+    },
+    "next_role": "Dev",
+    "release_id": "release-2026-03-05-phase0_week02",
+    "risk_controls": [
+      "争议项设置72小时收敛窗口，超时升级机制",
+      "契约冻结前需Dev校验器实现验证",
+      "验证矩阵需QA+Security联合评审",
+      "威胁模型更新纳入Security一票否决权",
+      "部署基线需SRE+SRE联合确认"
+    ],
+    "role": "PM",
+    "skills_applied": [
+      "PMP范围管理与争议收敛",
+      "PfMP治理框架与Gate指标化",
+      "PgMP跨角色依赖统筹",
+      "风险识别与管控措施定义",
+      "契约冻结流程设计",
+      "可交接文档结构化输出"
+    ],
+    "summary": "Phase0 Week2 契约冻结初稿完成。5项任务中W2T1由PM主导完成争议项收敛框架，W2T2/W2T3/W2T4/W2T5待各角色输入。本周输出可交接草案，邀请Dev/QA/Security/SRE评审反馈。契约冻结版文档结构已定义，校验器接口规范已起草，验证矩阵框架已规划。"
+  },
+  "release_id": "release-2026-03-05-phase0_week02",
+  "role": "Blackboard",
+  "source_role": "PM",
+  "summary": "blackboard merged artifact from PM and broadcast feedback"
+}

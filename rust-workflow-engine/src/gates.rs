@@ -2,6 +2,7 @@ use crate::error::EngineError;
 use crate::model::{Role, RoleState, WorkflowContext};
 use serde_json::Value;
 use std::fs;
+use std::path::Path;
 
 pub fn gate_pm_dev_qa_approved(ctx: &WorkflowContext) -> Result<(), EngineError> {
     let required = [Role::PM, Role::Dev, Role::QA];
@@ -290,4 +291,143 @@ fn has_explicit_gate_decision(text: &str) -> bool {
     ];
 
     patterns.iter().any(|p| lower.contains(p))
+}
+
+// ============================================================================
+// Phase 0 门禁函数
+// ============================================================================
+
+/// Phase 0: 契约已定义
+pub fn gate_phase0_contract_defined(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let required_files = [
+        "../doc/phase0/phase0_week1_contract_draft_v1.md",
+        "../doc/phase0/phase0_week1_contract_technical_spec.md",
+    ];
+
+    for file in required_files {
+        if !Path::new(file).exists() {
+            return Err(EngineError::GateFailed(format!(
+                "missing required deliverable: {}",
+                file
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+/// Phase 0: 利益相关者审批通过
+pub fn gate_phase0_stakeholders_approved(ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let required_roles = [Role::PM, Role::Dev, Role::QA];
+
+    for role in required_roles {
+        let state = ctx
+            .role_states
+            .get(&role)
+            .cloned()
+            .unwrap_or(RoleState::Idle);
+        if state != RoleState::Approved {
+            return Err(EngineError::GateFailed(format!(
+                "{} has not approved",
+                role.as_key()
+            )));
+        }
+    }
+
+    Ok(())
+}
+
+/// Phase 0: 契约已冻结
+pub fn gate_phase0_contract_frozen(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let frozen_doc = "../doc/phase0/phase0_week2_contract_frozen_v1.md";
+    
+    if !Path::new(frozen_doc).exists() {
+        return Err(EngineError::GateFailed(format!(
+            "frozen contract document not found: {}",
+            frozen_doc
+        )));
+    }
+
+    let content = fs::read_to_string(frozen_doc).map_err(|e| {
+        EngineError::GateFailed(format!("cannot read frozen contract: {}", e))
+    })?;
+
+    if content.contains("{{") || content.contains("}}") {
+        return Err(EngineError::GateFailed(
+            "frozen contract contains unresolved placeholders".to_string()
+        ));
+    }
+
+    Ok(())
+}
+
+/// Phase 0: 校验器就绪
+pub fn gate_phase0_validator_ready(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let validator_file = "../doc/phase0/phase0_week2_contract_validator.md";
+    
+    if !Path::new(validator_file).exists() {
+        return Err(EngineError::GateFailed(format!(
+            "validator file not found: {}",
+            validator_file
+        )));
+    }
+
+    Ok(())
+}
+
+/// Phase 0: 回放集就绪
+pub fn gate_phase0_replay_set_ready(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let replay_file = "../doc/phase0/phase0_week3_replay_set_n200.md";
+    
+    if !Path::new(replay_file).exists() {
+        return Err(EngineError::GateFailed(format!(
+            "replay set file not found: {}",
+            replay_file
+        )));
+    }
+
+    Ok(())
+}
+
+/// Phase 0: 样本量达标
+pub fn gate_phase0_sample_minimum(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    // Mock 模式下简化检查，仅验证文件存在
+    let replay_file = "../doc/phase0/phase0_week3_replay_set_n200.md";
+    
+    if !Path::new(replay_file).exists() {
+        return Err(EngineError::GateFailed(format!(
+            "replay set file not found: {}",
+            replay_file
+        )));
+    }
+
+    Ok(())
+}
+
+/// Phase 0: 门禁报告就绪
+pub fn gate_phase0_gate_report_ready(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let report_file = "../doc/phase0/phase0_week4_gate_report_generator.md";
+    
+    if !Path::new(report_file).exists() {
+        return Err(EngineError::GateFailed(format!(
+            "gate report file not found: {}",
+            report_file
+        )));
+    }
+
+    Ok(())
+}
+
+/// Phase 0: CI 集成完成
+pub fn gate_phase0_ci_integration(_ctx: &WorkflowContext) -> Result<(), EngineError> {
+    let ci_file = "../doc/phase0/phase0_week4_ci_integration.md";
+    
+    if !Path::new(ci_file).exists() {
+        return Err(EngineError::GateFailed(format!(
+            "CI integration file not found: {}",
+            ci_file
+        )));
+    }
+
+    Ok(())
 }

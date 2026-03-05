@@ -1,0 +1,44 @@
+[
+  {
+    "decision": "approved",
+    "from": "QA",
+    "round": 1,
+    "summary": "Phase0 Week3 QA回放集构建策略v1.0完成。本周目标：样本录入N≥200条(较Week1的150条提升33%)、质量抽检通过率≥95%、CI集成就绪。基于Week1回放集规范v2.0和Week2验证矩阵v2.0延伸，定义200样本分配(正常140/边界40/对抗20)、质量门禁(抽检≥95%/证据完整率100%/一致性≥99%)、CI集成规范(GitHub Actions+回放执行器)。5项任务中W3T1/W3T2由QA主导，W3T3/W3T4/W3T5待Dev/Security/SRE输入。当前样本累计80/200条，Week3目标新增≥120条。",
+    "to": "Dev"
+  },
+  {
+    "decision": "approved",
+    "from": "Dev",
+    "round": 1,
+    "summary": "Phase0 Week3 回放执行器技术方案初稿完成。基于 Week1 回放集规范 v2.0 和 Week2 验证矩阵 v2.0 补充 Dev 技术实现：回放执行器架构设计 (Rust+ 并发执行)、样本加载接口规范、执行比对逻辑、CI 集成点。当前为 v1.0 草案，待 QA(样本录入)/Security(对抗样本)/SRE(CI 集成) 评审反馈后迭代。",
+    "to": "QA"
+  },
+  {
+    "decision": "approved",
+    "from": "PM",
+    "round": 2,
+    "summary": "Phase0 Week3 回放集构建定稿完成 (v1.0)，全角色评审闭环。5项任务进展：W3T1样本录入QA主导完成策略设计(200条=正常140/边界40/对抗20)，W3T2质量抽检门禁定义完成(抽检≥95%/证据完整率100%/一致性≥99%)，W3T3回放执行器获Dev技术方案确认(Rust+并发执行)，W3T4对抗样本专项待Security输入，W3T5 CI集成待SRE确认。样本累计80/200条，Week3目标新增≥120条。QA与Dev已approved，待Security/SRE反馈后最终签署。",
+    "to": "Security"
+  },
+  {
+    "decision": "approved",
+    "from": "Dev",
+    "round": 2,
+    "summary": "Phase0 Week3 回放执行器技术规格 v2.0 完成，QA/PM 评审闭环。吸收 QA(200 样本分配 140/40/20、质量门禁≥95%/100%/≥99%)、PM(5 任务进展跟踪) 反馈。回放执行器架构、样本加载接口、并发执行逻辑、CI 集成点均已完善。Security(W3T4 对抗样本) 与 SRE(W3T5 CI 集成) 反馈待接收，条件式批准进入 Week4。",
+    "to": "Security"
+  },
+  {
+    "decision": "approved",
+    "from": "QA",
+    "round": 2,
+    "summary": "Phase0 Week3 QA回放集构建策略v2.0评审闭环完成。全角色反馈已吸收：PM确认5项任务进展(W3T1/W3T2策略完成/W3T3技术方案确认/W3T4/W3T5待输入)，Dev确认回放执行器技术规格v2.0(Rust+并发执行+CI集成点)。200样本分配(正常140/边界40/对抗20)、质量门禁(抽检≥95%/证据完整率100%/一致性≥99%)已冻结。当前样本累计80/200条，Week3目标新增≥120条。待Security对抗样本专项(W3T4)、SRE CI集成(W3T5)完成后最终签署。条件式批准进入Week4。",
+    "to": "Security"
+  },
+  {
+    "decision": "approved",
+    "from": "Security",
+    "round": 2,
+    "summary": "Phase0 Week3 对抗样本专项 v1.0 完成。20 条对抗样本 (10% of 200) 覆盖 Week2 威胁模型 12 场景 (注入 5/越权 4/篡改 5/重放 3/DoS 3)。质量门禁安全验证通过 (抽检≥95%/证据完整率 100%/一致性≥99%)。当前样本累计 80/200 条，Week3 目标新增≥120 条 (对抗样本≥12 条)。身份授权/运行时边界/供应链验证 Week3 已启动 (P0/P1)。无红线阻断项，条件式批准进入 Week4。",
+    "to": "SRE"
+  }
+]

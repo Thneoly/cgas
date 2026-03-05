@@ -1,0 +1,51 @@
+{
+  "blackboard_version": 5,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 5,
+    "sample_size": 5,
+    "source": "blackboard-agent",
+    "window": "round-1"
+  },
+  "next_role": "SRE",
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# Phase0 Week1 黄金回放集规范\n\n**Release**: release-2026-03-05-phase0_week01  \n**Role**: QA  \n**状态**: 草案 v1.0 (待SRE/Security评审)  \n**最后更新**: 2026-03-05  \n**评审状态**: 条件式批准，待迭代v2.0\n\n---\n\n## 1. 回放集目标\n\n验证最小可运行链路 **Gateway → Executor → Verifier → Committer** 的确定性契约一致性。\n\n### 1.1 契约字段(基于PM/Dev草案)\n\n| 字段 | 类型 | 说明 | 测试要点 | 状态 |\n|------|------|------|----------|------|\n| `program` | string | 程序标识 | 唯一性、格式校验 | ✅ PM/Dev已定义 |\n| `input` | object | 输入数据 | 序列化一致性、边界值 | ✅ PM/Dev已定义 |\n| `state_root` | string | 状态根哈希 | 确定性、可复现 | ✅ PM/Dev已定义 |\n| `env_fingerprint` | string | 环境指纹 | 环境隔离、可追溯 | ⚠️ 待SRE补充规范 |\n\n### 1.2 最小可运行链路(基于PM/Dev草案)\n\n```\nGateway → Executor → Verifier → Committer\n   │          │           │           │\n   ▼          ▼           ▼           ▼\n  请求      执行        验证        提交\n  接收      结果        一致性      落账\n```\n\n**接口契约** (Dev v1.0):\n- 序列化: Rust serde\n- 协议: gRPC + REST双协议\n\n**失败路径与回滚** (Dev v1.0):\n- 需待完整设计后补充测试用例\n\n---\n\n## 2. 样本策略\n\n### 2.1 样本配比(70/20/10)\n\n| 样本类型 | 占比 | 数量 | 目的 |\n|----------|------|------|------|\n| **正常样本** | 70% | 105条 | 验证主链路功能正确性 |\n| **边界样本** | 20% | 30条 | 验证边界条件处理 |\n| **对抗样本** | 10% | 15条 | 验证异常处理与恢复 |\n| **合计** | 100% | 150条 | 最小样本集 |\n\n### 2.2 样本采集要求\n\n- **最小样本数**: 150条(低于此数不可给通过结论)\n- **覆盖率要求**: 契约字段覆盖≥95%\n- **一致性要求**: 回放一致性≥99%\n- **性能要求**: ⚠️ 待SRE补充SLOs\n\n---\n\n## 3. 测试矩阵\n\n### 3.1 正常样本测试矩阵\n\n| ID | program | input类型 | state_root验证 | env_fingerprint验证 | 预期结果 |\n|----|---------|-----------|----------------|---------------------|----------|\n| N01 | contract_v1 | 标准JSON | 哈希匹配 | 环境一致 | Success |\n| N02 | contract_v1 | 嵌套对象 | 哈希匹配 | 环境一致 | Success |\n| N03 | contract_v2 | 数组输入 | 哈希匹配 | 环境一致 | Success |\n| N04 | contract_v1 | 空对象 | 哈希匹配 | 环境一致 | Success |\n| N05 | contract_v2 | 混合类型 | 哈希匹配 | 环境一致 | Success |\n\n### 3.2 边界样本测试矩阵\n\n| ID | 边界类型 | 测试场景 | 预期行为 |\n|----|----------|----------|----------|\n| B01 | 输入大小 | 最大允许输入 | Success |\n| B02 | 输入大小 | 超出限制 | Rejected |\n| B03 | 数值边界 | int64最大值 | Success |\n| B04 | 数值边界 | int64溢出 | Rejected |\n| B05 | 字符串 | 空字符串 | 依契约定义 |\n| B06 | 字符串 | 超长字符串 | Rejected |\n| B07 | 嵌套深度 | 最大深度 | Success |\n| B08 | 嵌套深度 | 超限深度 | Rejected |\n| B09 | 并发 | 单请求 | Success |\n| B10 | 并发 | 并发请求 | Success/降级 |\n\n### 3.3 对抗样本测试矩阵\n\n| ID | 攻击类型 | 测试场景 | 预期行为 | 状态 |\n|----|----------|----------|----------|------|\n| A01 | 注入攻击 | SQL注入尝试 | Rejected+日志 | ⚠️ 待Security确认 |\n| A02 | 注入攻击 | XSS尝试 | Rejected+日志 | ⚠️ 待Security确认 |\n| A03 | 重放攻击 | 重复提交相同input | 检测+Replayed标记 | ⚠️ 待Security确认 |\n| A04 | 篡改攻击 | state_root不匹配 | Rejected | ✅ 可测试 |\n| A05 | 篡改攻击 | env_fingerprint不匹配 | Rejected | ⚠️ 待SRE规范 |\n| A06 | 格式攻击 | 非法JSON | Rejected | ✅ 可测试 |\n| A07 | 格式攻击 | 编码攻击 | Rejected | ✅ 可测试 |\n| A08 | 资源耗尽 | 超大payload | Rejected+限流 | ⚠️ 待SRE SLOs |\n| A09 | 时序攻击 | 超时请求 | Timeout+回滚 | ⚠️ 待Dev设计 |\n| A10 | 依赖故障 | 下游服务不可用 | Fallback/Requeued | ⚠️ 待Dev设计 |\n\n---\n\n## 4. 证据四元组规范\n\n所有测试执行必须产出完整证据四元组：\n\n```yaml\n证据四元组:\n  metric_value: \"<指标值，如覆盖率95%、一致性99%>\"\n  window: \"<时间窗口，如Phase0 Week1 2026-03-05至2026-03-12>\"\n  sample_size: \"<样本数量，如150>\"\n  source: \"<证据来源，如测试报告路径/日志ID>\"\n```\n\n### 4.1 证据采集点\n\n| 阶段 | 证据类型 | 采集方式 | 存储位置 | 状态 |\n|------|----------|----------|----------|------|\n| ExecuteRequest | 请求快照 | 序列化前捕获 | artifacts/execute_requests/ | ✅ 可实施 |\n| ExecutionResult | 执行结果 | 序列化后捕获 | artifacts/execution_results/ | ✅ 可实施 |\n| VerifyResult | 验证结果 | 一致性比对 | artifacts/verify_results/ | ✅ 可实施 |\n| EnvFingerprint | 环境指纹 | SRE规范采集 | artifacts/env_fingerprints/ | ⚠️ 待SRE规范 |\n\n---\n\n## 5. 门禁标准\n\n### 5.1 通过标准(Go)\n\n- ✅ 样本数≥150条\n- ✅ 契约字段覆盖率≥95%\n- ✅ 回放一致性≥99%\n- ⚠️ P99延迟≤?ms (待SRE补充SLO)\n- ✅ 对抗样本100%被正确拒绝/处理\n- ✅ 证据四元组完整率100%\n- ⚠️ 安全审计要求 (待Security补充)\n\n### 5.2 条件通过标准(Conditional Go)\n\n- ⚠️ 样本数120-149条(需补充计划)\n- ⚠️ 覆盖率90-94%(需补充用例)\n- ⚠️ 一致性97-98%(需调查不一致原因)\n- ⚠️ P99延迟超出SLO但≤150ms(需优化)\n\n### 5.3 不通过标准(No-Go)\n\n- ❌ 样本数<120条\n- ❌ 覆盖率<90%\n- ❌ 一致性<97%\n- ❌ P99延迟>150ms (暂定，待SRE确认)\n- ❌ 对抗样本有漏网\n- ❌ 证据四元组缺失>5%\n- ❌ 安全审计要求不满足 (待Security定义)\n\n---\n\n## 6. 执行计划\n\n### 6.1 Week1里程碑\n\n| 日期 | 里程碑 | 交付物 | 状态 |\n|------|--------|--------|------|\n| 2026-03-07 | 测试矩阵评审完成 | 本规范v1.0 | 🟡 待评审 |\n| 2026-03-09 | 样本采集框架就绪 | 采集脚本+存储结构 | 🔴 未开始 |\n| 2026-03-11 | 首批样本采集(50条) | 样本集v0.3 | 🔴 未开始 |\n| 2026-03-12 | Week1收尾评审 | 覆盖率报告+风险清单 | 🔴 未开始 |\n\n### 6.2 任务状态\n\n| ID | 任务 | 负责人 | 优先级 | 状态 | QA依赖 |\n|----|------|--------|--------|------|--------|\n| W1T1 | 契约字段定义与争议评审 | PM+Dev | P0 | 🟡 草案 | ✅ 已评审 |\n| W1T2 | 契约冻结并签署 | PM | P0 | 🔴 待评审 | ⚠️ 待QA/SRE/Security签署 |\n| W1T3 | 回放集结构设计 | QA | P0 | 🟡 草案v1.0 | ⚠️ 待SRE/Security输入 |\n| W1T4 | 环境指纹采集规范 | SRE | P1 | 🔴 未开始 | ⚠️ 阻塞性能门禁定义 |\n| W1T5 | 安全基线定义 | Security | P1 | 🔴 未开始 | ⚠️ 阻塞安全门禁定义 |\n\n---\n\n## 7. 风险控制\n\n| 风险 | 概率 | 影响 | 缓解措施 | 状态 |\n|------|------|------|----------|------|\n| 样本采集进度滞后 | 中 | 高 | 每日追踪+自动化采集 | 🟡 监控中 |\n| 契约字段变更 | 低 | 高 | 变更触发回归测试 | 🟢 已冻结草案 |\n| 环境不一致导致回放失败 | 中 | 中 | 待SRE规范后严格校验 | 🟡 待SRE |\n| 性能门禁缺失 | 高 | 高 | 催促SRE补充SLOs | 🔴 阻塞项 |\n| 安全门禁缺失 | 高 | 高 | 催促Security补充基线 | 🔴 阻塞项 |\n\n### 7.1 待闭环事项\n\n| 事项 | 责任方 | 截止 | 影响 |\n|------|--------|------|------|\n| 环境指纹SLOs定义 | SRE | 2026-03-07 | 性能门禁冻结 |\n| 安全审计要求定义 | Security | 2026-03-07 | 安全门禁冻结 |\n| 失败路径详细设计 | Dev | 2026-03-07 | 回滚测试用例 |\n\n---\n\n## 8. 交付物清单\n\n| 交付物 | 路径 | 状态 |\n|--------|------|------|\n| 回放集规范 | phase0_week1_replay_set_spec.md | 🟡 草案v1.0 |\n| 测试矩阵 | artifacts/test_matrices/week1/ | 🔴 待创建 |\n| 样本集 | artifacts/replay_samples/week1/ | 🔴 待创建 |\n| 证据库 | artifacts/evidence/week1/ | 🔴 待创建 |\n| 覆盖率报告 | reports/coverage/week1/ | 🔴 待创建 |\n\n---\n\n## 9. 附录：样本标注规范(草案)\n\n### 9.1 样本元数据\n\n```json\n{\n  \"sample_id\": \"N001\",\n  \"type\": \"normal|boundary|adversarial\",\n  \"program\": \"contract_v1\",\n  \"input_hash\": \"sha256:...\",\n  \"state_root\": \"0x...\",\n  \"env_fingerprint\": \"<待SRE规范>\",\n  \"created_at\": \"2026-03-05T10:00:00Z\",\n  \"expected_result\": \"success|rejected|replayed\",\n  \"actual_result\": \"...\",\n  \"consistency_check\": \"pass|fail\",\n  \"evidence_refs\": [\"...\"]\n}\n```\n\n### 9.2 一致性判定规则\n\n- **Pass**: 相同input+state_root+env_fingerprint → 相同output\n- **Fail**: 上述条件满足但output不同 → 记录差异并调查\n\n---\n\n## 10. 评审意见栏\n\n| 角色 | 姓名 | 日期 | 意见 | 签署 |\n|------|------|------|------|------|\n| QA | | 2026-03-05 | 草案v1.0完成，待SRE/Security输入后迭代v2.0 | 🟡 条件式 |\n| PM | | | 待评审 | 🔴 |\n| Dev | | | 待评审 | 🔴 |\n| SRE | | | 待补充环境指纹SLOs | 🔴 |\n| Security | | | 待补充安全审计要求 | 🔴 |\n\n---\n\n**版本历史**\n\n| 版本 | 日期 | 变更说明 | 签署人 |\n|------|------|----------|--------|\n| v1.0 | 2026-03-05 | 初始草案，基于PM/Dev输入，待SRE/Security评审 | QA |\n\n---\n\n**QA备注**: 本规范v1.0为条件式批准。样本采集0/150条，不可给最终通过结论。待SRE补充环境指纹SLOs、Security补充安全审计要求后迭代v2.0并冻结门禁标准。\n",
+        "path": "phase0_week1_replay_set_spec.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": "0/150 samples collected, 0% coverage, draft v1.0",
+      "sample_size": 150,
+      "source": "phase0_week1_replay_set_spec.md",
+      "window": "Phase0 Week1 (2026-03-05 to 2026-03-12)"
+    },
+    "evidence_refs": {
+      "risk_evidence": "SRE SLOs: 待补充(环境指纹采集规范W1T4)；Security Audit: 待补充(安全基线定义W1T5)",
+      "skill_evidence": "test-master: 测试矩阵设计、样本策略、覆盖率指标定义；phase1-gate-review: 门禁标准、Go/Conditional Go/No-Go决策规则"
+    },
+    "next_role": "SRE",
+    "release_id": "release-2026-03-05-phase0_week01",
+    "risk_controls": [
+      "样本不足150条不可给最终通过结论",
+      "证据四元组必须完整(metric_value/window/sample_size/source)",
+      "契约字段变更需触发回放集回归",
+      "待SRE补充环境指纹SLOs后方可冻结性能门禁",
+      "待Security补充审计要求后方可冻结安全门禁"
+    ],
+    "role": "QA",
+    "skills_applied": [
+      "test-master",
+      "phase1-gate-review",
+      "project-health"
+    ],
+    "summary": "Phase0 Week1 QA测试策略初稿完成。基于PM/Dev草案补充QA视角：150条最小样本集(70/20/10配比)、质量门禁标准(Go/Conditional Go/No-Go)、证据四元组规范。契约字段(program/input/state_root/env_fingerprint)测试覆盖已定义，最小链路端到端验证用例已设计。待SRE补充环境指纹SLOs、Security补充审计要求后迭代v2.0。当前样本采集0/150条，不可给最终通过结论。"
+  },
+  "release_id": "release-2026-03-05-phase0_week01",
+  "role": "Blackboard",
+  "source_role": "QA",
+  "summary": "blackboard merged artifact from QA and broadcast feedback"
+}

@@ -6,11 +6,13 @@
 - `role_prompt_playbook.md`：项目级角色矩阵与角色提示词模板
 - `phase1_execution_prompt_pack.md`：Phase 1 周执行 Prompt 包
 - `agent_identity_prompts/`：角色身份提示词（pm/dev/qa/security/sre）
+- `workflows/phase1.yaml`：默认流程执行计划（stage/gate/deliverable 配置）
 
 ## 使用顺序
 1. 先阅读 `role_prompt_playbook.md`，确定启用角色与技能基线。
 2. 执行 Phase 1 时，使用 `phase1_execution_prompt_pack.md` 的周度 Prompt。
 3. OpenClaw 角色身份约束使用 `agent_identity_prompts/*.md`。
+4. Workflow Engine 默认读取 `workflows/phase1.yaml`，可通过 `OPENCLAW_WORKFLOW_PLAN` 指向其他 phase 计划。
 
 ## 路径约束
 - ✅ 使用：`doc/agent_prompts/...`

@@ -1,0 +1,49 @@
+{
+  "blackboard_version": 5,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 5,
+    "sample_size": 5,
+    "source": "blackboard-agent",
+    "window": "round-1"
+  },
+  "next_role": null,
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# SRE deliverable\n\n- release_id: release-2026-03-05-phase0_week03\n- generated_by: mock-openclaw\n\n上下文说明：\n- 当前阶段：Phase0 Week3 - 回放集构建。\n- 你不需要自行在文件系统查找文档。\n- 以下已提供本地文档摘录，直接基于摘录执行。\n- role 字段必须使用 PM/Dev/QA/Security/SRE 之一。\n- 你必须输出 deliverables: [{path, content}]，path 必须使用给定目标路径。\n\n任务：以 SRE/执行负责人身份输出本周执行看板、风险台账、阻塞项与下一周开工条件。\n目标交付路径：phase0_week3_ci_integration.md\n\n[execution_board 摘录]\n## 本周目标\n\n1. **样本录入** - 完成 N≥200 样本录入与标注\n2. **质量抽检** - 抽检通过率 ≥95%\n3. **CI 集成** - 回放集集成到 CI 流程\n\n---\n\n\n## 任务表\n\n| ID | 任务 | 负责人 | 优先级 | 状态 |\n|----|------|--------|--------|------|\n| W3T1 | 样本录入（N≥200） | QA | P0 | Todo |\n| W3T2 | 质量抽检 | QA | P0 | Todo |\n| W3T3 | 回放执行器实现 | Dev | P0 | Todo |\n| W3T4 | 对抗样本专项 | Security | P1 | Todo |\n| W3T5 | CI 集成 | SRE | P1 | Todo |\n\n---\n\n\n## 角色启动指令\n\n\n## 周末验收清单\n\n\n\n\n[协作上下文]\n当前轮次: 1\n你必须吸收以下跨角色反馈并在本轮输出里体现闭环：\n- 来自Security: decision=approved, summary=Security executed prompt \n- 来自QA: decision=approved, summary=QA executed prompt ",
+        "path": "phase0_week3_ci_integration.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": 0.98,
+      "sample_size": 120,
+      "source": "mock-openclaw",
+      "window": "14d"
+    },
+    "evidence_refs": {
+      "artifact_version": "v2",
+      "risk_evidence": "gate_rules_v1",
+      "skill_evidence": "prompt_contract_v2"
+    },
+    "next_role": null,
+    "prompt_hash": "len:1342",
+    "release_id": "release-2026-03-05-phase0_week03",
+    "risk_controls": [
+      "gate_alignment",
+      "evidence_traceability"
+    ],
+    "role": "SRE",
+    "skills_applied": [
+      "pmp_baseline",
+      "sre_role_skill"
+    ],
+    "summary": "SRE executed prompt"
+  },
+  "release_id": "release-2026-03-05-phase0_week03",
+  "role": "Blackboard",
+  "source_role": "SRE",
+  "summary": "blackboard merged artifact from SRE and broadcast feedback"
+}

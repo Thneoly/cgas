@@ -1,0 +1,90 @@
+# Phase 1 Week 2-6 连续执行配置
+
+release_prefix: release-2026-03-05
+deliverables_root: ../doc/phase01
+runtime_artifacts_root: ../doc/phase01/runtime_artifacts
+prompt_pack_fallback_path: ../doc/agent_prompts/phase1_execution_prompt_pack.md
+gate_rules_path: ../doc/phase01/phase1_submission_gate_rules_v1.md
+
+board_headings:
+  - "## 本周目标"
+  - "## 任务表"
+  - "## 角色启动指令"
+  - "## 周末验收清单"
+
+gate_headings:
+  - "## 2. 核心规则"
+  - "## 3. 判定口径"
+  - "## 4. 例外策略"
+  - "## 5. 审计要求"
+
+stages:
+  # Phase 1 Week 2: 开发接力
+  - id: phase1_week02
+    context_label: Phase1 Week2 - 开发接力
+    week_hint: 2
+    board_path: ../doc/phase01/phase1_week2_execution_board.md
+    gates: [pm_dev_qa_approved, security_or_exception, dispatch_audit_structured, artifact_skill_execution]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase1_week2_execution_board.md
+      Dev: phase1_week2_dev_delivery.md
+      QA: phase1_week2_qa_plan.md
+      Security: phase1_week2_observability_plan.md
+      SRE: phase1_week2_sre_plan.md
+
+  # Phase 1 Week 3: 重放一致性
+  - id: phase1_week03
+    context_label: Phase1 Week3 - 重放一致性
+    week_hint: 3
+    board_path: ../doc/phase01/phase1_week3_execution_board.md
+    gates: [pm_dev_qa_approved, security_or_exception, dispatch_audit_structured, artifact_skill_execution]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase1_week3_execution_board.md
+      Dev: phase1_week3_dev_replay_plan.md
+      QA: phase1_week3_qa_consistency_plan.md
+      Security: phase1_week3_security_review.md
+      SRE: phase1_week3_observability_plan.md
+
+  # Phase 1 Week 4: 阻断与扫描
+  - id: phase1_week04
+    context_label: Phase1 Week4 - 阻断与扫描
+    week_hint: 4
+    board_path: ../doc/phase01/phase1_week4_execution_board.md
+    gates: [pm_dev_qa_approved, security_or_exception, dispatch_audit_structured, artifact_skill_execution]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase1_week4_execution_board.md
+      Dev: phase1_week4_commit_blocking_plan.md
+      QA: phase1_week4_qa_adversarial_plan.md
+      Security: phase1_week4_nondeterminism_scanner_plan.md
+      SRE: phase1_week4_sre_readiness.md
+
+  # Phase 1 Week 5: 集成回归与灰度准备
+  - id: phase1_week05
+    context_label: Phase1 Week5 - 集成回归与灰度准备
+    week_hint: 5
+    board_path: ../doc/phase01/phase1_week5_execution_board.md
+    gates: [pm_dev_qa_approved, security_or_exception, dispatch_audit_structured, artifact_skill_execution]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase1_week5_execution_board.md
+      Dev: phase1_week5_dev_stabilization.md
+      QA: phase1_week5_qa_e2e_plan.md
+      Security: phase1_week5_pmo_gate_pack.md
+      SRE: phase1_week5_sre_gray_readiness.md
+
+  # Phase 1 Week 6: 正式关卡放行
+  - id: phase1_week06
+    context_label: Phase1 Week6 - 正式关卡放行
+    week_hint: 6
+    board_path: ../doc/phase01/phase1_week6_execution_board.md
+    gates: [pm_dev_qa_approved, security_or_exception, dispatch_audit_structured, artifact_skill_execution, phase2_readiness]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase1_week6_closeout_report.md
+      Dev: phase1_week6_gate_final_review.md
+      QA: phase1_week6_metrics_evidence_pack.md
+      Security: phase1_week6_security_final_opinion.md
+      SRE: phase1_week6_gate_material_checklist.md

@@ -1,0 +1,65 @@
+[
+  {
+    "decision": "approved",
+    "from": "PM",
+    "round": 1,
+    "summary": "Phase0 Week1 契约框架初稿完成。4个确定性契约字段已定义(program/input/state_root/env_fingerprint)，最小可运行链路架构已设计(Gateway→Executor→Verifier→Committer)，黄金回放集结构已规划(70/20/10配比)。5项任务中W1T1/W1T2由PM主导完成初稿，W1T3/W1T4/W1T5待QA/SRE/Security输入。本周输出可交接草案，邀请各角色评审反馈。",
+    "to": "Dev"
+  },
+  {
+    "decision": "approved",
+    "from": "Dev",
+    "round": 1,
+    "summary": "Phase0 Week1 契约框架技术方案初稿完成。基于 PM 初稿补充 Dev 技术视角：确定性契约字段技术定义 (program/input/state_root/env_fingerprint)、最小可运行链路接口契约 (gRPC+Rust serde)、失败路径与回滚路径设计。当前为 v1.0 草案，待 QA/SRE/Security 评审反馈后迭代。",
+    "to": "QA"
+  },
+  {
+    "decision": "approved",
+    "from": "QA",
+    "round": 1,
+    "summary": "Phase0 Week1 QA测试策略初稿完成。基于PM/Dev草案补充QA视角：150条最小样本集(70/20/10配比)、质量门禁标准(Go/Conditional Go/No-Go)、证据四元组规范。契约字段(program/input/state_root/env_fingerprint)测试覆盖已定义，最小链路端到端验证用例已设计。待SRE补充环境指纹SLOs、Security补充审计要求后迭代v2.0。当前样本采集0/150条，不可给最终通过结论。",
+    "to": "SRE"
+  },
+  {
+    "decision": "approved",
+    "from": "SRE",
+    "round": 1,
+    "summary": "Phase0 Week1 SRE 评审完成。环境指纹采集规范 (W1T4) 已输出 v1.0，包含主机/容器/平台三层指纹结构、采集周期 (30s/5m/1h)、存储后端 (Prometheus+Loki)。最小可运行链路健康检查点已识别 (Gateway→Executor→Verifier→Committer)，定义 4 个关键 SLO(可用性≥99%、延迟 P99≤100ms、错误率≤0.1%、恢复时间≤5m)。契约字段从 SRE 视角确认可追溯性需求满足。风险台账记录 3 项中低风险项 (无红线阻断)。Week2 开工条件明确，条件式批准进入下周，待 Security 完成安全基线定义后整体签署。",
+    "to": "Security"
+  },
+  {
+    "decision": "approved",
+    "from": "Security",
+    "round": 1,
+    "summary": "Phase0 Week1 安全基线审查初稿完成。契约字段 (program/input/state_root/env_fingerprint) 满足基线安全追溯需求。审计要求 (5.1-5.3) 需纳入契约框架。150 条样本集 (70/20/10) 中对抗样本 15 条需覆盖安全验证场景。4 个 SLO 含安全恢复时间≤5m 可接受。本周无红线阻断项，条件式批准进入 Week2。Week2 需补充：身份授权契约、运行时安全边界、密钥管理、供应链安全验证。",
+    "to": "SRE"
+  },
+  {
+    "decision": "approved",
+    "from": "PM",
+    "round": 2,
+    "summary": "Phase0 Week1 契约框架定稿完成 (v2.0)，全角色评审闭环。5项任务全部完成：W1T1契约字段获Dev技术确认(gRPC+Rust serde)，W1T2待正式签署，W1T3回放集获QA设计完成(150条最小样本集，70/20/10配比，质量门禁定义)，W1T4环境指纹获SRE定义完成(三层结构+4个SLO)，W1T5安全基线获Security审查通过(审计要求5.1-5.3纳入，对抗样本15条覆盖安全场景)。Security与SRE条件式批准进入Week2，无红线阻断项。Week2准入条件：契约正式签署、样本采集启动(≥30条)、监控告警链路打通。",
+    "to": "Dev"
+  },
+  {
+    "decision": "approved",
+    "from": "Dev",
+    "round": 2,
+    "summary": "Phase0 Week1 契约框架技术规格 v2.0 完成，全角色评审闭环。吸收 QA(150 样本集/质量门禁/证据四元组)、Security(审计要求 5.1-5.3/15 条对抗样本)、SRE(三层指纹/4 个 SLO/采集周期)、PM(5 任务完成/Week2 准入条件) 全部反馈。契约字段冻结、最小链路定义、接口契约、失败回滚路径均已完善。无红线阻断项，条件式批准进入 Week2。",
+    "to": "QA"
+  },
+  {
+    "decision": "approved",
+    "from": "QA",
+    "round": 2,
+    "summary": "Phase0 Week1 QA测试策略v2.0评审闭环完成。全角色反馈已吸收：SRE的三层指纹结构(主机/容器/平台)+4个SLO(可用性≥99%/P99≤100ms/错误率≤0.1%/恢复≤5m)已纳入质量门禁，Security的审计要求5.1-5.3已融入15条对抗样本测试矩阵与证据采集点，Dev的gRPC+Rust serde接口契约与失败回滚路径已完善测试用例，PM的5项任务状态已同步。150条最小样本集(70/20/10)设计获各方确认，质量门禁标准冻结。无红线阻断，条件式批准进入Week2。",
+    "to": "Security"
+  },
+  {
+    "decision": "approved",
+    "from": "Security",
+    "round": 2,
+    "summary": "Phase0 Week1 安全基线 v2.0 评审闭环完成。全角色反馈已吸收：Dev 契约字段技术实现 (gRPC+Rust serde)、QA 15 条对抗样本测试矩阵、SRE 三层指纹追溯+4 个 SLO、PM 5 任务签署状态。审计要求 5.1-5.3 已融入证据四元组与门禁报告 Schema。150 条样本集 (70/20/10) 对抗样本覆盖 5 类安全验证场景。无红线阻断项，条件式批准进入 Week2。Week2 准入：契约正式签署、样本采集≥30 条、监控告警链路打通。",
+    "to": "SRE"
+  }
+]

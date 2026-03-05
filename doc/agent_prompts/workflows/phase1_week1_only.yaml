@@ -1,0 +1,34 @@
+# Phase 1 Week 1 执行配置
+
+release_prefix: release-2026-03-05
+deliverables_root: ../doc/phase01
+runtime_artifacts_root: ../doc/phase01/runtime_artifacts
+prompt_pack_fallback_path: ../doc/agent_prompts/phase1_execution_prompt_pack.md
+gate_rules_path: ../doc/phase01/phase1_submission_gate_rules_v1.md
+
+board_headings:
+  - "## 本周目标"
+  - "## 任务表"
+  - "## 角色启动指令"
+  - "## 周末验收清单"
+
+gate_headings:
+  - "## 2. 核心规则"
+  - "## 3. 判定口径"
+  - "## 4. 例外策略"
+  - "## 5. 审计要求"
+
+stages:
+  # Phase 1 Week 1: 启动周
+  - id: phase1_week01
+    context_label: Phase1 Week1 - 启动周
+    week_hint: 1
+    board_path: ../doc/phase01/phase1_week1_execution_board.md
+    gates: [pm_dev_qa_approved, security_or_exception, dispatch_audit_structured, artifact_skill_execution]
+    initial_roles: [PM]
+    deliverable_paths:
+      PM: phase1_week1_prd_v1.md
+      Dev: phase1_week1_adr_v1.md
+      QA: phase1_week1_test_matrix_v1.md
+      Security: phase1_week3_security_review.md
+      SRE: phase1_week1_risk_register_v1.md

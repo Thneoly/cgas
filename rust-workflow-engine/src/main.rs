@@ -1,17 +1,24 @@
 mod blackboard_agent;
+mod contract;
 mod engine;
 mod error;
 mod executor;
+mod gate_report;
 mod gates;
 mod model;
+mod workflow_plan;
 
 use crate::engine::{EngineConfig, WorkflowEngine};
 use crate::executor::{CliOpenClawExecutor, MockOpenClawExecutor, OpenClawExecutor};
 use crate::gates::{
-    gate_artifact_skill_execution, gate_dispatch_audit_structured, gate_phase2_readiness, gate_pm_dev_qa_approved,
+    gate_artifact_skill_execution, gate_dispatch_audit_structured, gate_phase2_readiness,
+    gate_phase0_ci_integration, gate_phase0_contract_defined, gate_phase0_contract_frozen,
+    gate_phase0_gate_report_ready, gate_phase0_replay_set_ready, gate_phase0_sample_minimum,
+    gate_phase0_stakeholders_approved, gate_phase0_validator_ready, gate_pm_dev_qa_approved,
     gate_security_or_exception,
 };
 use crate::model::{Role, RoleState, WorkflowContext};
+use crate::workflow_plan::{WorkflowPlan, WorkflowStage};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -33,11 +40,17 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("openclaw agent histories cleared before this run");
     }
 
-    for week in 1..=6 {
-        println!("== week{:02} orchestration start ==", week);
-        env::set_var("OPENCLAW_CURRENT_WEEK", week.to_string());
+    let (plan, plan_path) = WorkflowPlan::load_from_env()?;
+    println!("workflow_plan={} stages={}", plan_path, plan.stages.len());
 
-        let mut ctx = WorkflowContext::new(format!("release-2026-03-03-w{:02}", week));
+    for (index, stage) in plan.stages.iter().enumerate() {
+        let week_hint = stage.week_hint.unwrap_or(index + 1);
+        println!("== {} orchestration start ==", stage.id);
+        env::set_var("OPENCLAW_CURRENT_WEEK", week_hint.to_string());
+        env::set_var("OPENCLAW_CURRENT_STAGE", &stage.id);
+        set_stage_deliverable_env(stage, week_hint);
+
+        let mut ctx = WorkflowContext::new(format!("{}-{}", plan.release_prefix, stage.id));
         ctx.role_states.insert(Role::PM, RoleState::Idle);
         ctx.role_states.insert(Role::Dev, RoleState::Idle);
         ctx.role_states.insert(Role::QA, RoleState::Idle);
@@ -46,59 +59,76 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         ctx.role_states.insert(Role::Blackboard, RoleState::Idle);
 
         let mut engine = WorkflowEngine::new(ctx, EngineConfig::mvp_default());
-        engine.register_gate(gate_pm_dev_qa_approved);
-        engine.register_gate(gate_security_or_exception);
-        engine.register_gate(gate_dispatch_audit_structured);
-        engine.register_gate(gate_artifact_skill_execution);
-        if week == 6 {
-            engine.register_gate(gate_phase2_readiness);
-        }
+        register_stage_gates(&mut engine, stage)?;
 
-        let prompts = build_phase_week_prompts(week)?;
-        engine.run_orchestration(executor.as_ref(), &prompts, vec![Role::PM], 30)?;
+        let prompts = build_stage_prompts(stage, &plan, week_hint)?;
+        let initial_roles = resolve_roles(&stage.initial_roles)?;
+        let max_steps = stage.max_steps.unwrap_or(30);
+        engine.run_orchestration(executor.as_ref(), &prompts, initial_roles, max_steps)?;
 
-        println!("== week{:02} after orchestration ==", week);
+        println!("== {} after orchestration ==", stage.id);
         engine.print_state();
 
-        let week_artifacts_dir = format!("../doc/phase01/runtime_artifacts/week{}", week);
-        engine.export_artifacts(&week_artifacts_dir)?;
-        println!("artifacts exported to {}", week_artifacts_dir);
+        let artifact_dir = stage.artifact_output_dir.clone().unwrap_or_else(|| {
+            format!(
+                "{}/{}",
+                plan.runtime_artifacts_root.trim_end_matches('/'),
+                stage.id
+            )
+        });
+        engine.export_artifacts(&artifact_dir)?;
+        println!("artifacts exported to {}", artifact_dir);
 
-        engine.materialize_deliverables("../doc/phase01", week)?;
-        println!("deliverables materialized for week{:02} to ../doc/phase01", week);
+        let deliverables_root = stage
+            .deliverables_root
+            .as_deref()
+            .unwrap_or(&plan.deliverables_root);
+        engine.materialize_deliverables(deliverables_root, week_hint)?;
+        println!(
+            "deliverables materialized for stage={} to {}",
+            stage.id, deliverables_root
+        );
 
         engine.execute_gates()?;
-        println!("== week{:02} gates pass ==", week);
+        println!("== {} gates pass ==", stage.id);
         engine.print_state();
     }
 
     Ok(())
 }
 
-fn build_phase_week_prompts(week: usize) -> Result<HashMap<Role, String>, Box<dyn std::error::Error>> {
-    let board_path = format!("../doc/phase01/phase1_week{}_execution_board.md", week);
-    let board = fs::read_to_string(&board_path)?;
-    let gate_rules = fs::read_to_string("../doc/phase01/phase1_submission_gate_rules_v1.md")?;
+fn build_stage_prompts(
+    stage: &WorkflowStage,
+    plan: &WorkflowPlan,
+    week_hint: usize,
+) -> Result<HashMap<Role, String>, Box<dyn std::error::Error>> {
+    let board_path = stage
+        .board_path
+        .clone()
+        .unwrap_or_else(|| format!("../doc/phase01/phase1_week{}_execution_board.md", week_hint));
+    let board = match fs::read_to_string(&board_path) {
+        Ok(content) => content,
+        Err(_) => {
+            let fallback = &plan.prompt_pack_fallback_path;
+            println!(
+                "stage={} execution board missing at {}, fallback to {}",
+                stage.id, board_path, fallback
+            );
+            fs::read_to_string(fallback)?
+        }
+    };
+    let gate_rules_path = stage
+        .gate_rules_path
+        .as_deref()
+        .unwrap_or(&plan.gate_rules_path);
+    let gate_rules = fs::read_to_string(gate_rules_path)?;
 
-    let board_excerpt = extract_markdown_sections(
-        &board,
-        &[
-            "## 本周目标",
-            "## 任务表",
-            "## 角色启动指令",
-            "## 周末验收清单",
-        ],
-        5000,
-    );
-    let gate_excerpt = extract_markdown_sections(
-        &gate_rules,
-        &["## 2. 核心规则", "## 3. 判定口径", "## 4. 例外策略", "## 5. 审计要求"],
-        2600,
-    );
+    let board_excerpt = extract_markdown_sections(&board, &plan.board_headings, 5000);
+    let gate_excerpt = extract_markdown_sections(&gate_rules, &plan.gate_headings, 2600);
 
     let fixed_context = format!(
-        "上下文说明：\n- 当前阶段：Phase1 Week{}。\n- 你不需要自行在文件系统查找文档。\n- 以下已提供本地 Phase1 文档摘录，直接基于摘录执行。\n- role 字段必须使用 PM/Dev/QA/Security/SRE 之一。\n- 你必须输出 deliverables: [{{path, content}}]，path 必须使用给定目标路径。\n",
-        week
+        "上下文说明：\n- 当前阶段：{}。\n- 你不需要自行在文件系统查找文档。\n- 以下已提供本地文档摘录，直接基于摘录执行。\n- role 字段必须使用 PM/Dev/QA/Security/SRE 之一。\n- 你必须输出 deliverables: [{{path, content}}]，path 必须使用给定目标路径。\n",
+        stage.context_label()
     );
 
     let mut prompts = HashMap::new();
@@ -107,7 +137,7 @@ fn build_phase_week_prompts(week: usize) -> Result<HashMap<Role, String>, Box<dy
         format!(
             "{}\n任务：以 PM 身份输出本周执行结论、风险与下周准入条件。\n目标交付路径：{}\n\n[execution_board 摘录]\n{}",
             fixed_context,
-            week_role_deliverable_path(week, &Role::PM),
+            stage_role_deliverable_path(stage, week_hint, &Role::PM),
             board_excerpt
         ),
     );
@@ -116,7 +146,7 @@ fn build_phase_week_prompts(week: usize) -> Result<HashMap<Role, String>, Box<dy
         format!(
             "{}\n任务：以架构/开发身份输出本周技术方案、接口契约、失败与回滚路径。\n目标交付路径：{}\n\n[execution_board 摘录]\n{}",
             fixed_context,
-            week_role_deliverable_path(week, &Role::Dev),
+            stage_role_deliverable_path(stage, week_hint, &Role::Dev),
             board_excerpt
         ),
     );
@@ -125,7 +155,7 @@ fn build_phase_week_prompts(week: usize) -> Result<HashMap<Role, String>, Box<dy
         format!(
             "{}\n任务：以 QA 身份输出本周测试策略、样本门禁和证据四元组。\n目标交付路径：{}\n\n[execution_board 摘录]\n{}",
             fixed_context,
-            week_role_deliverable_path(week, &Role::QA),
+            stage_role_deliverable_path(stage, week_hint, &Role::QA),
             board_excerpt
         ),
     );
@@ -134,7 +164,7 @@ fn build_phase_week_prompts(week: usize) -> Result<HashMap<Role, String>, Box<dy
         format!(
             "{}\n任务：以 Security 身份输出本周安全审查结论、红线风险与阻断覆盖。\n目标交付路径：{}\n\n[phase1_submission_gate_rules 摘录]\n{}",
             fixed_context,
-            week_role_deliverable_path(week, &Role::Security),
+            stage_role_deliverable_path(stage, week_hint, &Role::Security),
             gate_excerpt
         ),
     );
@@ -143,12 +173,25 @@ fn build_phase_week_prompts(week: usize) -> Result<HashMap<Role, String>, Box<dy
         format!(
             "{}\n任务：以 SRE/执行负责人身份输出本周执行看板、风险台账、阻塞项与下一周开工条件。\n目标交付路径：{}\n\n[execution_board 摘录]\n{}",
             fixed_context,
-            week_role_deliverable_path(week, &Role::SRE),
+            stage_role_deliverable_path(stage, week_hint, &Role::SRE),
             board_excerpt
         ),
     );
 
     Ok(prompts)
+}
+
+fn stage_role_deliverable_path(stage: &WorkflowStage, week_hint: usize, role: &Role) -> String {
+    if let Some(path) = stage
+        .deliverable_paths
+        .iter()
+        .find(|(k, _)| k.eq_ignore_ascii_case(role.as_key()))
+        .map(|(_, v)| v.clone())
+    {
+        return path;
+    }
+
+    week_role_deliverable_path(week_hint, role).to_string()
 }
 
 fn week_role_deliverable_path(week: usize, role: &Role) -> &'static str {
@@ -212,7 +255,7 @@ fn week_role_deliverable_path(week: usize, role: &Role) -> &'static str {
     }
 }
 
-fn extract_markdown_sections(doc: &str, headings: &[&str], max_chars: usize) -> String {
+fn extract_markdown_sections(doc: &str, headings: &[String], max_chars: usize) -> String {
     let mut sections: Vec<(String, String)> = Vec::new();
     let mut current_heading = String::new();
     let mut current_body = String::new();
@@ -238,7 +281,7 @@ fn extract_markdown_sections(doc: &str, headings: &[&str], max_chars: usize) -> 
     for target in headings {
         if let Some((heading, body)) = sections
             .iter()
-            .find(|(heading, _)| heading.contains(target))
+            .find(|(heading, _)| heading.contains(target.as_str()))
         {
             merged.push_str(heading);
             merged.push('\n');
@@ -254,9 +297,74 @@ fn extract_markdown_sections(doc: &str, headings: &[&str], max_chars: usize) -> 
     merged.chars().take(max_chars).collect()
 }
 
+fn resolve_roles(raw_roles: &[String]) -> Result<Vec<Role>, Box<dyn std::error::Error>> {
+    let mut roles = Vec::new();
+    for raw in raw_roles {
+        let role = Role::from_key(raw).ok_or_else(|| {
+            format!(
+                "unknown role '{}' in workflow stage initial_roles; expected PM/Dev/QA/Security/SRE",
+                raw
+            )
+        })?;
+        roles.push(role);
+    }
+
+    if roles.is_empty() {
+        roles.push(Role::PM);
+    }
+
+    Ok(roles)
+}
+
+fn register_stage_gates(
+    engine: &mut WorkflowEngine,
+    stage: &WorkflowStage,
+) -> Result<(), Box<dyn std::error::Error>> {
+    for gate_name in &stage.gates {
+        match gate_name.as_str() {
+            // Phase 1 gates
+            "pm_dev_qa_approved" => engine.register_gate(gate_pm_dev_qa_approved),
+            "security_or_exception" => engine.register_gate(gate_security_or_exception),
+            "dispatch_audit_structured" => engine.register_gate(gate_dispatch_audit_structured),
+            "artifact_skill_execution" => engine.register_gate(gate_artifact_skill_execution),
+            "phase2_readiness" => engine.register_gate(gate_phase2_readiness),
+            
+            // Phase 0 gates
+            "phase0_contract_defined" => engine.register_gate(gate_phase0_contract_defined),
+            "phase0_stakeholders_approved" => engine.register_gate(gate_phase0_stakeholders_approved),
+            "phase0_contract_frozen" => engine.register_gate(gate_phase0_contract_frozen),
+            "phase0_validator_ready" => engine.register_gate(gate_phase0_validator_ready),
+            "phase0_replay_set_ready" => engine.register_gate(gate_phase0_replay_set_ready),
+            "phase0_sample_minimum" => engine.register_gate(gate_phase0_sample_minimum),
+            "phase0_gate_report_ready" => engine.register_gate(gate_phase0_gate_report_ready),
+            "phase0_ci_integration" => engine.register_gate(gate_phase0_ci_integration),
+            
+            other => {
+                return Err(format!("unknown gate in workflow plan: {}", other).into());
+            }
+        }
+    }
+
+    Ok(())
+}
+
+fn set_stage_deliverable_env(stage: &WorkflowStage, week_hint: usize) {
+    for role in [Role::PM, Role::Dev, Role::QA, Role::Security, Role::SRE] {
+        let key = format!(
+            "OPENCLAW_DEFAULT_DELIVERABLE_{}",
+            role.as_key().to_ascii_uppercase()
+        );
+        let value = stage_role_deliverable_path(stage, week_hint, &role);
+        env::set_var(key, value);
+    }
+}
+
 fn env_bool(key: &str) -> bool {
     match env::var(key) {
-        Ok(v) => matches!(v.trim().to_ascii_lowercase().as_str(), "1" | "true" | "yes" | "on"),
+        Ok(v) => matches!(
+            v.trim().to_ascii_lowercase().as_str(),
+            "1" | "true" | "yes" | "on"
+        ),
         Err(_) => false,
     }
 }
@@ -279,7 +387,10 @@ fn clear_openclaw_agent_histories() -> Result<(), Box<dyn std::error::Error>> {
                     .file_name()
                     .and_then(|n| n.to_str())
                     .unwrap_or_default();
-                if name == "sessions.json" || name.ends_with(".jsonl") || name.contains(".jsonl.reset") {
+                if name == "sessions.json"
+                    || name.ends_with(".jsonl")
+                    || name.contains(".jsonl.reset")
+                {
                     fs::remove_file(&path)?;
                 }
             }
@@ -308,6 +419,13 @@ fn resolve_openclaw_agent_ids() -> Vec<String> {
             if !value.is_empty() && !ids.iter().any(|x| x == value) {
                 ids.push(value.to_string());
             }
+        }
+    }
+
+    let default_role_ids = ["pm", "dev", "qa", "security", "sre"];
+    for value in default_role_ids {
+        if !ids.iter().any(|x| x == value) {
+            ids.push(value.to_string());
         }
     }
 

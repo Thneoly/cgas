@@ -39,13 +39,15 @@ cargo run
 ```bash
 export OPENCLAW_EXECUTOR_MODE=cli
 export OPENCLAW_BIN=openclaw
-export OPENCLAW_AGENT_ID=main
+# 默认即分会话（即使不设也会使用 pm/dev/qa/security/sre）
 # 可选：按角色覆盖 agent
 export OPENCLAW_AGENT_PM=pm
 export OPENCLAW_AGENT_DEV=dev
 export OPENCLAW_AGENT_QA=qa
 export OPENCLAW_AGENT_SECURITY=security
 export OPENCLAW_AGENT_SRE=sre
+# 可选：全局兜底（不建议在正式分会话模式使用）
+# export OPENCLAW_AGENT_ID=main
 # 开发模式兜底（默认关闭）
 # export OPENCLAW_DEV_FALLBACK_ENABLED=true
 # export OPENCLAW_DEV_FALLBACK_MAX_RETRY=2
@@ -63,8 +65,8 @@ openclaw agent --local --agent <AGENT_ID> --message "<PROMPT>" --json
 
 > agent 选择规则：
 > 1. 优先读取 `OPENCLAW_AGENT_<ROLE>`（如 `OPENCLAW_AGENT_PM`）
-> 2. 未设置时使用 `OPENCLAW_AGENT_ID`
-> 3. 仍未设置则回落到 `main`
+> 2. 未设置时使用 `OPENCLAW_AGENT_ID`（全局兜底）
+> 3. 仍未设置时默认按角色分会话：`pm/dev/qa/security/sre`
 
 开发模式兜底策略（默认关闭）：
 

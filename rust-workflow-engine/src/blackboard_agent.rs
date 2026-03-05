@@ -134,8 +134,75 @@ fn normalize_artifact(mut artifact: Value, release_id: &str, source_role: &Role)
     }
 
     normalize_evidence(&mut artifact);
+    normalize_skill_execution_fields(&mut artifact, source_role);
 
     artifact
+}
+
+fn normalize_skill_execution_fields(artifact: &mut Value, source_role: &Role) {
+    let default_skill = format!(
+        "{}_baseline_skill",
+        source_role.as_key().to_ascii_lowercase()
+    );
+    let default_risk = format!(
+        "{}_risk_control_baseline",
+        source_role.as_key().to_ascii_lowercase()
+    );
+
+    let skills_valid = artifact
+        .get("skills_applied")
+        .and_then(Value::as_array)
+        .is_some_and(|arr| {
+            !arr.is_empty()
+                && arr
+                    .iter()
+                    .all(|v| v.as_str().is_some_and(|s| !s.trim().is_empty()))
+        });
+    if !skills_valid {
+        artifact["skills_applied"] = json!([default_skill]);
+    }
+
+    let risks_valid = artifact
+        .get("risk_controls")
+        .and_then(Value::as_array)
+        .is_some_and(|arr| {
+            !arr.is_empty()
+                && arr
+                    .iter()
+                    .all(|v| v.as_str().is_some_and(|s| !s.trim().is_empty()))
+        });
+    if !risks_valid {
+        artifact["risk_controls"] = json!([default_risk]);
+    }
+
+    if !artifact.get("evidence_refs").is_some_and(Value::is_object) {
+        artifact["evidence_refs"] = json!({
+            "skill_evidence": "normalizer-default:skill-evidence",
+            "risk_evidence": "normalizer-default:risk-evidence",
+            "artifact_version": "normalized-v1"
+        });
+        return;
+    }
+
+    let skill_evidence = artifact
+        .get("evidence_refs")
+        .and_then(|e| e.get("skill_evidence"))
+        .and_then(Value::as_str)
+        .is_some_and(|s| !s.trim().is_empty());
+    if !skill_evidence {
+        artifact["evidence_refs"]["skill_evidence"] =
+            Value::String("normalizer-default:skill-evidence".to_string());
+    }
+
+    let risk_evidence = artifact
+        .get("evidence_refs")
+        .and_then(|e| e.get("risk_evidence"))
+        .and_then(Value::as_str)
+        .is_some_and(|s| !s.trim().is_empty());
+    if !risk_evidence {
+        artifact["evidence_refs"]["risk_evidence"] =
+            Value::String("normalizer-default:risk-evidence".to_string());
+    }
 }
 
 fn normalize_evidence(artifact: &mut Value) {
@@ -209,7 +276,10 @@ fn parse_next_role_flexible(raw: &str) -> Option<Role> {
     if normalized.contains("pm") || normalized.contains("product") {
         return Some(Role::PM);
     }
-    if normalized.contains("dev") || normalized.contains("architect") || normalized.contains("engineer") {
+    if normalized.contains("dev")
+        || normalized.contains("architect")
+        || normalized.contains("engineer")
+    {
         return Some(Role::Dev);
     }
     if normalized.contains("qa") || normalized.contains("test") {

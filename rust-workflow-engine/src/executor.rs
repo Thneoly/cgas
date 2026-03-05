@@ -28,7 +28,7 @@ impl OpenClawExecutor for CliOpenClawExecutor {
         let role_agent_key = format!("OPENCLAW_AGENT_{}", role.as_key().to_ascii_uppercase());
         let agent_id = env::var(&role_agent_key)
             .or_else(|_| env::var("OPENCLAW_AGENT_ID"))
-            .unwrap_or_else(|_| "main".to_string());
+            .unwrap_or_else(|_| default_agent_id_for_role(role).to_string());
 
         let output = Command::new(&self.bin)
             .arg("--no-color")
@@ -90,6 +90,17 @@ impl OpenClawExecutor for CliOpenClawExecutor {
         Err(EngineError::ArtifactParse(
             "cannot find artifact json in openclaw output".to_string(),
         ))
+    }
+}
+
+fn default_agent_id_for_role(role: &Role) -> &'static str {
+    match role {
+        Role::PM => "pm",
+        Role::Dev => "dev",
+        Role::QA => "qa",
+        Role::Security => "security",
+        Role::SRE => "sre",
+        Role::Blackboard => "blackboard",
     }
 }
 
@@ -192,7 +203,7 @@ impl OpenClawExecutor for MockOpenClawExecutor {
             .ok()
             .and_then(|v| v.parse::<usize>().ok())
             .unwrap_or(1);
-        let deliverable_path = default_deliverable_path(week, role);
+        let deliverable_path = resolve_deliverable_path(week, role);
 
         Ok(json!({
             "role": role.as_key(),
@@ -233,6 +244,19 @@ impl OpenClawExecutor for MockOpenClawExecutor {
             }
         }))
     }
+}
+
+fn resolve_deliverable_path(week: usize, role: &Role) -> String {
+    let role_key = role.as_key().to_ascii_uppercase();
+    let specific_key = format!("OPENCLAW_DEFAULT_DELIVERABLE_{}", role_key);
+    if let Ok(path) = env::var(&specific_key) {
+        let trimmed = path.trim();
+        if !trimmed.is_empty() {
+            return trimmed.to_string();
+        }
+    }
+
+    default_deliverable_path(week, role).to_string()
 }
 
 fn default_deliverable_path(week: usize, role: &Role) -> &'static str {

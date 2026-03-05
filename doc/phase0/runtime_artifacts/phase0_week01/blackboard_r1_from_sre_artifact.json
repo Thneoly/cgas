@@ -1,0 +1,51 @@
+{
+  "blackboard_version": 7,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 7,
+    "sample_size": 7,
+    "source": "blackboard-agent",
+    "window": "round-1"
+  },
+  "next_role": "Security",
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# Phase0 Week1 - 可观测性基线与执行看板\n\n**Release ID**: release-2026-03-05-phase0_week01  \n**角色**: SRE/执行负责人  \n**周期**: 2026-03-05 ~ 2026-03-12  \n**版本**: v1.0 (SRE 评审完成，待 Security 输入后整体签署)\n\n---\n\n## 一、本周目标达成情况\n\n| 目标 | 状态 | 验收证据 |\n|------|------|----------|\n| 冻结确定性契约字段 | 🟡 In Review | program/input/state_root/env_fingerprint 已定义，SRE 确认 env_fingerprint 可追溯性满足 |\n| 定义最小可运行链路 | ✅ 完成 | Gateway→Executor→Verifier→Committer 链路图已输出，健康检查点已识别 |\n| 定义黄金回放集结构 | 🟡 In Review | 正常/边界/对抗=70/20/10，SRE 已补充环境指纹 SLOs，待 Security 审计要求 |\n\n---\n\n## 二、执行看板\n\n### 任务状态总览\n\n| ID | 任务 | 负责人 | 优先级 | 状态 | SRE 进展 |\n|----|------|--------|--------|------|----------|\n| W1T1 | 契约字段定义与争议评审 | PM+Dev | P0 | 🟡 In Review | SRE 已确认 env_fingerprint 字段设计 |\n| W1T2 | 契约冻结并签署 | PM | P0 | ⏳ Waiting | 待所有角色评审完成后签署 |\n| W1T3 | 回放集结构设计 | QA | P0 | 🟡 In Review | SRE 已补充环境指纹 SLOs |\n| W1T4 | 环境指纹采集规范 | SRE | P1 | ✅ Done | 本交付物 v1.0 |\n| W1T5 | 安全基线定义 | Security | P1 | ⏳ Pending | 待 Security 输入 |\n\n### 关键路径\n\n```\nW1T1(评审中) → W1T2(待签署) → Week2 开发启动\n                        ↓\nW1T3(评审中) → 样本采集启动 → Week2 验证链路\n                        ↓\nW1T4(完成) → 监控部署 → Week2 告警打通\n                        ↓\nW1T5(待输入) → 安全审计 → Week2 合规验证\n```\n\n### 任务依赖关系\n\n- W1T2 依赖：W1T1 完成 + 所有角色评审通过\n- W1T3 依赖：W1T1 完成 (契约字段确定) + SRE/Security 输入\n- W1T4 依赖：W1T1 完成 (env_fingerprint 字段确定) ✅ 已满足\n- W1T5 依赖：W1T1 完成 (契约字段确定) ✅ 已满足\n\n---\n\n## 三、环境指纹采集规范 (W1T4 交付)\n\n### 3.1 指纹层级结构\n\n| 层级 | 采集项 | 周期 | 存储后端 | 保留期 |\n|------|--------|------|----------|--------|\n| 主机层 | CPU/内存/磁盘/网络/machine-id | 30s | Prometheus | 30 天 |\n| 容器层 | Pod 状态/重启次数/资源配额/container_id | 30s | Prometheus | 30 天 |\n| 平台层 | Gateway/Executor/Verifier/Committer 健康状态 | 5m | Loki + Prometheus | 14 天 |\n| 应用层 | Rust 运行时版本/配置哈希/panic 计数 | 1h | Loki | 90 天 |\n\n### 3.2 env_fingerprint 字段定义\n\n```rust\n/// 环境指纹 - 用于契约追溯与回放复现\npub struct EnvFingerprint {\n    pub host_hash: String,        // 主机指纹 (machine-id + kernel version)\n    pub container_id: String,     // 容器 ID (Docker/K8s)\n    pub runtime_version: String,  // Rust 运行时版本 (rustc + cargo)\n    pub platform_config_hash: String, // 平台配置哈希 (git commit hash)\n    pub collected_at: u64,        // 采集时间戳 (ms since epoch)\n    pub region: String,           // 部署区域 (可选，用于多区域追溯)\n}\n\n/// 指纹采集器\npub struct FingerprintCollector {\n    pub interval_secs: u64,       // 采集周期\n    pub storage_backend: String,  // prometheus/loki/hybrid\n}\n```\n\n### 3.3 采集频率与告警策略\n\n| 指标类型 | 采集频率 | 保留期 | 告警阈值 | 告警渠道 |\n|----------|----------|--------|----------|----------|\n| 资源指标 (CPU/Mem/Disk) | 30s | 30 天 | CPU>80%, Mem>90%, Disk>85% | Prometheus Alertmanager |\n| 容器健康状态 | 30s | 30 天 | 重启次数>3/小时 | Prometheus Alertmanager |\n| 服务健康检查 | 10s | 7 天 | 连续 3 次失败触发 | PagerDuty/钉钉 |\n| 应用日志 (错误/panic) | 实时 | 90 天 | 错误日志>10/min 或 panic>0 | Loki + Alertmanager |\n| 链路延迟 P99 | 1m | 30 天 | P99>100ms 持续 5m | Prometheus Alertmanager |\n\n### 3.4 健康检查端点规范\n\n| 组件 | 端点 | 检查类型 | 深度检查内容 |\n|------|------|----------|--------------|\n| Gateway | `GET /health` | 浅检查 | HTTP 200 响应 |\n| Gateway | `GET /healthz` | 深检查 | 下游 Executor 连接状态 |\n| Executor | `GET /healthz` | 深检查 | 任务队列深度 + 工作线程状态 |\n| Verifier | `GET /health` | 浅检查 | HTTP 200 响应 |\n| Verifier | `GET /healthz` | 深检查 | 验证逻辑可用性 + 缓存状态 |\n| Committer | `GET /ready` | 就绪检查 | 存储连接 + 写入权限 |\n| Committer | `GET /healthz` | 深检查 | 最近提交延迟 + 积压量 |\n\n---\n\n## 四、最小可运行链路 SLO 定义\n\n### 4.1 组件级 SLO\n\n| 组件 | 可用性 SLO | 延迟 P99 | 错误率 | MTTR 目标 |\n|------|------------|----------|--------|----------|\n| Gateway | ≥99% | ≤50ms | ≤0.1% | ≤5m |\n| Executor | ≥99% | ≤200ms | ≤0.1% | ≤5m |\n| Verifier | ≥99% | ≤100ms | ≤0.1% | ≤5m |\n| Committer | ≥99% | ≤50ms | ≤0.1% | ≤5m |\n\n### 4.2 端到端 SLO\n\n| 指标 | 目标值 | 测量方法 | 告警阈值 |\n|------|--------|----------|----------|\n| 整体可用性 | ≥99% | 端到端探测 (每 5m) | <99% 持续 15m |\n| 端到端延迟 P99 | ≤100ms | 链路追踪 (Jaeger/Tempo) | >100ms 持续 5m |\n| 端到端错误率 | ≤0.1% | 错误计数/总请求数 | >0.1% 持续 5m |\n| MTTR | ≤5m | 故障检测到恢复时间 | >5m 触发事后分析 |\n\n### 4.3 可观测性技术栈\n\n| 层级 | 工具 | 用途 |\n|------|------|------|\n| 指标采集 | Prometheus + node-exporter | 资源指标 + 自定义指标 |\n| 日志聚合 | Loki + Promtail | 应用日志 + 系统日志 |\n| 链路追踪 | Jaeger 或 Tempo | 端到端链路追踪 |\n| 可视化 | Grafana | 仪表盘 + 告警配置 |\n| 告警路由 | Alertmanager | 告警聚合 + 通知路由 |\n\n---\n\n## 五、风险台账\n\n| 风险 ID | 描述 | 等级 | 影响 | 缓解措施 | 负责人 | 目标解决日期 |\n|---------|------|------|------|----------|--------|---------------|\n| R001 | 契约签署延迟影响 Week2 开发启动 | Medium | 关键路径阻塞 | PM 需在 2026-03-08 前完成所有角色评审并组织签署仪式 | PM | 2026-03-08 |\n| R002 | 回放集样本采集进度滞后 (当前 0/150 条) | Medium | 验证链路延迟 | QA 主导，SRE 提供自动化采集脚本支持；Week2 目标完成 50 条 | QA+SRE | 2026-03-19 |\n| R003 | Week2 安全增强项技术规范未及时输出 | Medium | 安全审计不合规 | Security 需在 Week2 首日输出身份授权/运行时边界规范；SRE 协助评审 | Security | 2026-03-12 |\n| R004 | 监控告警链路部署复杂度高 | Low | 可观测性延迟 | SRE 提前准备 Helm Chart 和 Terraform 模板，Week2 首日部署 | SRE | 2026-03-12 |\n\n### 风险等级定义\n\n- **High (红线)**: 直接阻断项目进展，需立即升级\n- **Medium**: 可能影响进度或质量，需制定缓解计划\n- **Low**: 可接受风险，持续监控\n\n**当前状态**: 无 High 等级风险，项目可条件式进入 Week2\n\n---\n\n## 六、阻塞项\n\n| 阻塞 ID | 描述 | 依赖方 | 预计解决时间 | 状态 | 升级路径 |\n|---------|------|--------|--------------|------|----------|\n| B001 | 契约正式签署仪式待安排 (需所有角色评审完成) | PM | 2026-03-08 | 🟡 Pending | PM → 项目发起人 |\n| B002 | Security 安全基线定义待输出 | Security | 2026-03-08 | 🟡 Pending | Security → PM |\n\n**当前无红线阻断项** - 所有任务可条件式进入 Week2\n\n---\n\n## 七、Week2 开工条件 (Entry Criteria)\n\n### 必须满足条件 (Go/No-Go)\n\n- [ ] W1T2 契约签署完成 (PM 负责，所有角色签字确认)\n- [ ] W1T3 回放集结构设计 v2.0 完成 (QA 负责，包含 SRE SLOs + Security 审计要求)\n- [ ] W1T5 安全基线定义完成 (Security 负责，包含身份授权/运行时边界/密钥管理/供应链)\n- [ ] 开发环境容器化部署完成 (Dev+SRE 负责，Docker Compose 或 K8s namespace)\n\n### 建议满足条件 (Conditional Go)\n\n- [ ] 监控告警链路基础框架部署 (SRE 负责，Prometheus+Grafana 可用)\n- [ ] CI/CD 流水线基础框架搭建 (Dev+SRE 负责，GitHub Actions/GitLab CI)\n- [ ] 回放集样本采集启动 (QA 负责，目标：Week2 结束前完成 50/150 条)\n- [ ] 首次端到端健康检查验证 (SRE+Dev 负责，4 个组件健康检查端点可用)\n\n### Week2 出口条件 (Exit Criteria)\n\n- [ ] 最小可运行链路端到端打通 (Gateway→Executor→Verifier→Committer)\n- [ ] 监控仪表盘 v1.0 上线 (Grafana Dashboard)\n- [ ] 告警规则 v1.0 配置完成 (Alertmanager)\n- [ ] 回放集样本采集完成 50/150 条\n- [ ] 首次 Panic/Backtrace 排障演练完成\n\n---\n\n## 八、跨角色反馈闭环\n\n| 角色 | 决策 | 关键反馈 | SRE 响应/闭环 |\n|------|------|----------|---------------|\n| PM | Approved | 5 项任务中 W1T1/W1T2/W1T3 进入评审阶段，W1T4/W1T5 待输入 | ✅ W1T4 已完成 v1.0，W1T5 待 Security；执行看板已更新状态跟踪 |\n| Dev | Approved | 接口契约采用 Rust serde + gRPC/REST 双协议，失败路径与回滚机制已明确 | ✅ 健康检查端点已按双协议设计；SRE 将验证回滚路径监控覆盖 |\n| QA | Approved | 150 条最小样本集 (70/20/10)，待 SRE 补充环境指纹 SLOs | ✅ 已在 Section 3.3/4.2 补充 SLOs；采集脚本将支持样本标注 |\n| Security | Pending | 待输出安全基线定义 (审计要求 5.1-5.3) | ⏳ 风险台账 R003 已记录；SRE 将协助评审运行时安全边界 |\n\n---\n\n## 九、交付物清单\n\n| 交付物 | 路径 | 状态 | 版本 |\n|--------|------|------|------|\n| 环境指纹采集规范 | 本文件 Section 3 | ✅ 完成 | v1.0 |\n| 执行看板 | 本文件 Section 2 | ✅ 完成 | v1.0 |\n| 风险台账 | 本文件 Section 5 | ✅ 完成 | v1.0 |\n| Week2 开工条件 | 本文件 Section 7 | ✅ 完成 | v1.0 |\n| 最小链路 SLO 定义 | 本文件 Section 4 | ✅ 完成 | v1.0 |\n\n---\n\n## 十、附录：Rust 服务运维诊断检查清单\n\n### 10.1 发布健康检查\n\n- [ ] 二进制文件完整性校验 (SHA256)\n- [ ] 配置文件版本与 Git commit hash 匹配\n- [ ] 环境变量注入验证\n- [ ] 端口绑定检查 (无冲突)\n- [ ] 依赖服务连接测试 (数据库/消息队列/下游服务)\n\n### 10.2 Panic/Backtrace 排障\n\n- [ ] RUST_BACKTRACE=1 环境变量配置\n- [ ] panic hook 注册 (记录到日志系统)\n- [ ] 核心转储 (coredump) 配置\n- [ ] 符号表保留 (debug symbols)\n- [ ] 告警规则：panic 计数>0 立即触发\n\n### 10.3 性能与资源异常定位\n\n- [ ] CPU 火焰图采集工具准备 (perf + flamegraph)\n- [ ] 内存分析工具准备 (jemalloc_profiling)\n- [ ] 链路追踪采样率配置 (1%~10%)\n- [ ] 慢查询日志阈值 (P99>100ms)\n- [ ] 资源配额与限制 (K8s requests/limits)\n\n---\n\n**签署**: SRE/执行负责人  \n**日期**: 2026-03-05  \n**下一评审点**: 2026-03-12 (Week2 结束)  \n**下一角色**: Security (完成 W1T5 安全基线定义)\n",
+        "path": "phase0_week1_observability_baseline.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": "1/1 SRE tasks completed (W1T4), 3 SLOs defined, 4 health check endpoints specified, 3 risks logged",
+      "sample_size": 4,
+      "source": "execution_board + Dev/QA/PM feedback synthesis + SRE observability baseline design",
+      "window": "Phase0 Week1 (2026-03-05 to 2026-03-12)"
+    },
+    "evidence_refs": {
+      "risk_evidence": "3 risks identified with mitigation owners and timelines, 0 critical path blockers, all SRE tasks have clear entry/exit criteria",
+      "skill_evidence": "devops-engineer: observability baseline + SLO design; kubernetes-specialist: container fingerprint spec; project-manager: execution board + risk register; phase1-workflow: role coordination protocol"
+    },
+    "next_role": "Security",
+    "release_id": "release-2026-03-05-phase0_week01",
+    "risk_controls": [
+      "契约字段冻结前需完成跨角色评审签署 (W1T2)，SRE 已确认 env_fingerprint 可追溯性",
+      "回放集样本采集需 QA 主导，SRE 提供环境指纹采集脚本支持 (W1T3+W1T4 联动)",
+      "Week2 安全增强项 (身份授权/运行时边界/密钥管理/供应链) 需 Security 提前输出技术规范",
+      "最小链路健康检查端点需 Dev 在接口契约中实现，SRE 部署监控探针验证"
+    ],
+    "role": "SRE",
+    "skills_applied": [
+      "devops-engineer",
+      "kubernetes-specialist",
+      "project-manager",
+      "phase1-workflow"
+    ],
+    "summary": "Phase0 Week1 SRE 评审完成。环境指纹采集规范 (W1T4) 已输出 v1.0，包含主机/容器/平台三层指纹结构、采集周期 (30s/5m/1h)、存储后端 (Prometheus+Loki)。最小可运行链路健康检查点已识别 (Gateway→Executor→Verifier→Committer)，定义 4 个关键 SLO(可用性≥99%、延迟 P99≤100ms、错误率≤0.1%、恢复时间≤5m)。契约字段从 SRE 视角确认可追溯性需求满足。风险台账记录 3 项中低风险项 (无红线阻断)。Week2 开工条件明确，条件式批准进入下周，待 Security 完成安全基线定义后整体签署。"
+  },
+  "release_id": "release-2026-03-05-phase0_week01",
+  "role": "Blackboard",
+  "source_role": "SRE",
+  "summary": "blackboard merged artifact from SRE and broadcast feedback"
+}
