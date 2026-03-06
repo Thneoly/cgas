@@ -7,6 +7,7 @@
 
 pub mod oidc;
 pub mod rbac;
+pub mod audit_log;
 
 pub use oidc::{
     OidcAuthenticator,
@@ -32,4 +33,23 @@ pub use rbac::{
     AuthorizationRequest,
     AuthorizationResponse,
     AuthorizationStats,
+};
+
+pub use audit_log::{
+    AuditLogger,
+    AuditLogConfig,
+    AuditLogEntry,
+    AuditLogQuery,
+    AuditLogStats,
+    EventType,
+    Subject,
+    SubjectType,
+    Action,
+    ActionType,
+    Resource,
+    ResourceType,
+    OperationResult,
+    Environment,
+    SecuritySeverity,
+    AuditLogError,
 };
