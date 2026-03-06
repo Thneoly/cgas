@@ -6,6 +6,7 @@
 //! - 审计日志：完整审计追踪
 
 pub mod oidc;
+pub mod rbac;
 
 pub use oidc::{
     OidcAuthenticator,
@@ -16,4 +17,19 @@ pub use oidc::{
     OidcAuthResponse,
     OidcStats,
     OidcError,
+};
+
+pub use rbac::{
+    RbacAbacAuthorizer,
+    PermissionConfig,
+    Role,
+    Permission,
+    AbacPolicy,
+    AbacRule,
+    AttributeCondition,
+    Operator,
+    Effect,
+    AuthorizationRequest,
+    AuthorizationResponse,
+    AuthorizationStats,
 };
