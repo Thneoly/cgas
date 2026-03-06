@@ -1,0 +1,176 @@
+// Transaction 服务 gRPC 定义
+// Phase 2 新增服务
+
+syntax = "proto3";
+
+package cgas.transaction;
+
+import "executor.proto";
+
+// 隔离级别
+enum IsolationLevel {
+  ISOLATION_LEVEL_UNSPECIFIED = 0;
+  ISOLATION_LEVEL_READ_COMMITTED = 1;
+  // ISOLATION_LEVEL_REPEATABLE_READ = 2;  // Phase 3 扩展
+  // ISOLATION_LEVEL_SERIALIZABLE = 3;     // Phase 3 扩展
+}
+
+// 事务状态
+enum TransactionStatus {
+  TRANSACTION_STATUS_UNSPECIFIED = 0;
+  TRANSACTION_STATUS_CREATED = 1;
+  TRANSACTION_STATUS_ACTIVE = 2;
+  TRANSACTION_STATUS_EXECUTING = 3;
+  TRANSACTION_STATUS_COMMITTED = 4;
+  TRANSACTION_STATUS_ROLLEDBACK = 5;
+}
+
+// 提交状态
+enum CommitStatus {
+  COMMIT_STATUS_UNSPECIFIED = 0;
+  COMMIT_STATUS_SUCCESS = 1;
+  COMMIT_STATUS_FAILED = 2;
+}
+
+// 回滚状态
+enum RollbackStatus {
+  ROLLBACK_STATUS_UNSPECIFIED = 0;
+  ROLLBACK_STATUS_SUCCESS = 1;
+  ROLLBACK_STATUS_FAILED = 2;
+}
+
+// 执行状态
+enum ExecutionStatus {
+  EXECUTION_STATUS_UNSPECIFIED = 0;
+  EXECUTION_STATUS_SUCCESS = 1;
+  EXECUTION_STATUS_FAILED = 2;
+  EXECUTION_STATUS_EXECUTING = 3;
+}
+
+// ==================== 事务开始 ====================
+
+// 事务开始请求
+message BeginTransactionRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 隔离级别
+  IsolationLevel isolation_level = 3;
+  // 超时时间 (毫秒)
+  int64 timeout_ms = 4;
+  // 请求时间戳 (RFC3339)
+  string timestamp = 5;
+}
+
+// 事务开始响应
+message BeginTransactionResponse {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 事务状态
+  TransactionStatus status = 3;
+  // 响应时间戳 (RFC3339)
+  string timestamp = 4;
+}
+
+// ==================== 事务执行 ====================
+
+// 事务执行请求
+message TransactionExecuteRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 要执行的指令列表
+  repeated cgas.executor.ExecuteRequest instructions = 3;
+  // 请求时间戳 (RFC3339)
+  string timestamp = 4;
+}
+
+// 事务执行结果
+message TransactionExecuteResult {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 执行状态
+  ExecutionStatus status = 3;
+  // 指令执行结果
+  repeated cgas.executor.ExecutionResult results = 4;
+  // 累积的 state_diff (未提交)
+  repeated cgas.executor.StateDiffOperation accumulated_diff = 5;
+  // 响应时间戳 (RFC3339)
+  string timestamp = 4;
+}
+
+// ==================== 事务提交 ====================
+
+// 事务提交请求
+message CommitTransactionRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 事务哈希
+  string transaction_hash = 3;
+  // 请求时间戳 (RFC3339)
+  string timestamp = 4;
+}
+
+// 事务提交响应
+message CommitTransactionResponse {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 提交状态
+  CommitStatus status = 3;
+  // 响应时间戳 (RFC3339)
+  string timestamp = 4;
+  // 提交确认哈希
+  string commit_hash = 5;
+}
+
+// ==================== 事务回滚 ====================
+
+// 事务回滚请求
+message RollbackTransactionRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 回滚原因
+  string reason = 3;
+  // 请求时间戳 (RFC3339)
+  string timestamp = 4;
+}
+
+// 事务回滚响应
+message RollbackTransactionResponse {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务唯一标识
+  string transaction_id = 2;
+  // 回滚状态
+  RollbackStatus status = 3;
+  // 响应时间戳 (RFC3339)
+  string timestamp = 4;
+}
+
+// ==================== Transaction 服务 ====================
+
+service TransactionService {
+  // 开始事务
+  rpc BeginTransaction(BeginTransactionRequest) returns (BeginTransactionResponse);
+  
+  // 执行事务内指令
+  rpc TransactionExecute(TransactionExecuteRequest) returns (TransactionExecuteResult);
+  
+  // 提交事务
+  rpc CommitTransaction(CommitTransactionRequest) returns (CommitTransactionResponse);
+  
+  // 回滚事务
+  rpc RollbackTransaction(RollbackTransactionRequest) returns (RollbackTransactionResponse);
+}
