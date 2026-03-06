@@ -8,6 +8,10 @@
 
 pub mod async_pool;
 pub mod incremental_replay;
+pub mod validation_cache;
+pub mod object_pool;
 
 pub use async_pool::{AsyncPool, AsyncPoolConfig, ExecutorAsyncPool, VerifierAsyncPool};
 pub use incremental_replay::IncrementalReplayer;
+pub use validation_cache::{ValidationCache, ValidationCacheConfig, ValidationCacheKey};
+pub use object_pool::{ObjectPool, ObjectPoolConfig, StateDiffObjectPool, ExecutionResultObjectPool};
