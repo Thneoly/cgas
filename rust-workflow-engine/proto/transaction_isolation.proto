@@ -1,0 +1,289 @@
+// Transaction 隔离级别扩展 gRPC 定义
+// Phase 3: Repeatable Read 隔离级别支持
+
+syntax = "proto3";
+
+package cgas.transaction;
+
+import "executor.proto";
+
+// 隔离级别（Phase 3 扩展）
+enum IsolationLevel {
+  ISOLATION_LEVEL_UNSPECIFIED = 0;
+  ISOLATION_LEVEL_READ_COMMITTED = 1;
+  ISOLATION_LEVEL_REPEATABLE_READ = 2;  // Phase 3 新增
+  // ISOLATION_LEVEL_SERIALIZABLE = 3;  // 未来扩展
+}
+
+// 锁类型
+enum LockType {
+  LOCK_TYPE_UNSPECIFIED = 0;
+  LOCK_TYPE_SHARED = 1;      // 共享锁（读锁）
+  LOCK_TYPE_EXCLUSIVE = 2;   // 排他锁（写锁）
+}
+
+// 写操作类型
+enum WriteOperation {
+  WRITE_OPERATION_UNSPECIFIED = 0;
+  WRITE_OPERATION_INSERT = 1;
+  WRITE_OPERATION_UPDATE = 2;
+  WRITE_OPERATION_DELETE = 3;
+}
+
+// ==================== 快照管理 ====================
+
+// 创建快照请求
+message CreateSnapshotRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务 ID
+  string transaction_id = 2;
+  // 要快照的键列表
+  repeated string keys = 3;
+  // 请求时间戳
+  string timestamp = 4;
+}
+
+// 创建快照响应
+message CreateSnapshotResponse {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务 ID
+  string transaction_id = 2;
+  // 快照 ID
+  string snapshot_id = 3;
+  // 快照中的键数量
+  uint32 keys_count = 4;
+  // 响应时间戳
+  string timestamp = 5;
+}
+
+// ==================== Repeatable Read 执行 ====================
+
+// RR 读请求
+message RepeatableReadRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务 ID
+  string transaction_id = 2;
+  // 要读取的键
+  string key = 3;
+  // 请求时间戳
+  string timestamp = 4;
+}
+
+// RR 读响应
+message RepeatableReadResponse {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务 ID
+  string transaction_id = 2;
+  // 读取的值
+  string value = 3;
+  // 是否存在
+  bool exists = 4;
+  // 版本号
+  uint64 version = 5;
+  // 响应时间戳
+  string timestamp = 6;
+}
+
+// RR 写请求
+message RepeatableWriteRequest {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务 ID
+  string transaction_id = 2;
+  // 要写入的键
+  string key = 3;
+  // 写入的值
+  string value = 4;
+  // 写操作类型
+  WriteOperation operation = 5;
+  // 请求时间戳
+  string timestamp = 6;
+}
+
+// RR 写响应
+message RepeatableWriteResponse {
+  // 事务 trace ID
+  string trace_id = 1;
+  // 事务 ID
+  string transaction_id = 2;
+  // 是否成功
+  bool success = 3;
+  // 错误信息（失败时）
+  string error_message = 4;
+  // 响应时间戳
+  string timestamp = 5;
+}
+
+// ==================== 锁管理 ====================
+
+// 锁信息
+message LockInfo {
+  // 锁定的键
+  string key = 1;
+  // 锁类型
+  LockType lock_type = 2;
+  // 持有锁的事务 ID
+  string transaction_id = 3;
+  // 获取锁的时间戳
+  int64 acquired_at = 4;
+  // 锁过期时间戳
+  int64 expires_at = 5;
+}
+
+// 获取锁请求
+message AcquireLockRequest {
+  // 事务 ID
+  string transaction_id = 1;
+  // 要锁定的键
+  string key = 2;
+  // 锁类型
+  LockType lock_type = 3;
+  // 超时时间（毫秒）
+  int64 timeout_ms = 4;
+}
+
+// 获取锁响应
+message AcquireLockResponse {
+  // 是否成功
+  bool success = 1;
+  // 锁信息
+  LockInfo lock = 2;
+  // 错误信息（失败时）
+  string error_message = 3;
+}
+
+// 释放锁请求
+message ReleaseLockRequest {
+  // 事务 ID
+  string transaction_id = 1;
+  // 要释放的键
+  string key = 2;
+}
+
+// 释放锁响应
+message ReleaseLockResponse {
+  // 是否成功
+  bool success = 1;
+  // 错误信息（失败时）
+  string error_message = 2;
+}
+
+// ==================== 冲突检测 ====================
+
+// 冲突信息
+message ConflictInfo {
+  // 冲突类型
+  string conflict_type = 1;
+  // 冲突的键
+  string key = 2;
+  // 冲突的事务 ID
+  string conflicting_transaction_id = 3;
+  // 期望的版本号
+  uint64 expected_version = 4;
+  // 实际的版本号
+  uint64 actual_version = 5;
+}
+
+// 检测冲突请求
+message DetectConflictRequest {
+  // 事务 ID
+  string transaction_id = 1;
+  // 要检查的键列表
+  repeated string keys = 2;
+}
+
+// 检测冲突响应
+message DetectConflictResponse {
+  // 是否存在冲突
+  bool has_conflict = 1;
+  // 冲突列表
+  repeated ConflictInfo conflicts = 2;
+}
+
+// ==================== 版本查询 ====================
+
+// 版本信息
+message VersionInfo {
+  // 数据键
+  string key = 1;
+  // 版本号
+  uint64 version = 2;
+  // 数据值
+  string value = 3;
+  // 创建时间戳
+  int64 created_at = 4;
+}
+
+// 查询版本请求
+message GetVersionRequest {
+  // 数据键
+  string key = 1;
+  // 是否返回所有版本
+  bool all_versions = 2;
+}
+
+// 查询版本响应
+message GetVersionResponse {
+  // 版本列表
+  repeated VersionInfo versions = 1;
+  // 最新版本号
+  uint64 latest_version = 2;
+}
+
+// ==================== 死锁检测 ====================
+
+// 死锁信息
+message DeadlockInfo {
+  // 涉及死锁的事务 ID 列表
+  repeated string transaction_ids = 1;
+  // 死锁环路描述
+  string cycle_description = 2;
+  // 建议的牺牲事务（用于打破死锁）
+  string victim_transaction_id = 3;
+}
+
+// 检测死锁请求
+message DetectDeadlockRequest {
+  // 事务 ID（可选，检查特定事务）
+  string transaction_id = 1;
+}
+
+// 检测死锁响应
+message DetectDeadlockResponse {
+  // 是否检测到死锁
+  bool has_deadlock = 1;
+  // 死锁信息
+  DeadlockInfo deadlock_info = 2;
+}
+
+// ==================== RR 事务服务 ====================
+
+service RepeatableReadService {
+  // 创建快照
+  rpc CreateSnapshot(CreateSnapshotRequest) returns (CreateSnapshotResponse);
+  
+  // RR 读
+  rpc RepeatableRead(RepeatableReadRequest) returns (RepeatableReadResponse);
+  
+  // RR 写
+  rpc RepeatableWrite(RepeatableWriteRequest) returns (RepeatableWriteResponse);
+  
+  // 获取锁
+  rpc AcquireLock(AcquireLockRequest) returns (AcquireLockResponse);
+  
+  // 释放锁
+  rpc ReleaseLock(ReleaseLockRequest) returns (ReleaseLockResponse);
+  
+  // 检测冲突
+  rpc DetectConflict(DetectConflictRequest) returns (DetectConflictResponse);
+  
+  // 查询版本
+  rpc GetVersion(GetVersionRequest) returns (GetVersionResponse);
+  
+  // 检测死锁
+  rpc DetectDeadlock(DetectDeadlockRequest) returns (DetectDeadlockResponse);
+}

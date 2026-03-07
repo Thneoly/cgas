@@ -1,0 +1,295 @@
+version: '3.8'
+
+# CGAS Beta Environment - 7 节点集群模拟
+# 3 应用服务器 + 2 数据库 + 2 负载均衡器 (单容器模拟多节点)
+
+services:
+  # ==================== 负载均衡器 (2 台 HA) ====================
+  nginx-lb-1:
+    image: nginx:1.24-alpine
+    container_name: cgas-beta-lb-1
+    ports:
+      - "8082:80"
+    volumes:
+      - ./nginx/lb-1.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - beta-app-1
+      - beta-app-2
+      - beta-app-3
+    networks:
+      - beta_network
+    restart: unless-stopped
+
+  nginx-lb-2:
+    image: nginx:1.24-alpine
+    container_name: cgas-beta-lb-2
+    ports:
+      - "8083:80"
+    volumes:
+      - ./nginx/lb-2.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - beta-app-1
+      - beta-app-2
+      - beta-app-3
+    networks:
+      - beta_network
+    restart: unless-stopped
+
+  # ==================== 应用服务器 (3 台) ====================
+  beta-app-1:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-beta-app-1
+    ports:
+      - "8084:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:BetaEnv2026!Secure@beta-db-primary:5432/cgas
+      - REDIS_URL=redis://beta-redis:6379
+      - ENVIRONMENT=beta
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=beta-app-1
+    depends_on:
+      beta-db-primary:
+        condition: service_healthy
+      beta-redis:
+        condition: service_healthy
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/beta-app-1:/app/logs
+    # No healthcheck for mock executor - uses idle loop
+    restart: unless-stopped
+
+  beta-app-2:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-beta-app-2
+    ports:
+      - "8085:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:BetaEnv2026!Secure@beta-db-primary:5432/cgas
+      - REDIS_URL=redis://beta-redis:6379
+      - ENVIRONMENT=beta
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=beta-app-2
+    depends_on:
+      beta-db-primary:
+        condition: service_healthy
+      beta-redis:
+        condition: service_healthy
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/beta-app-2:/app/logs
+    # No healthcheck for mock executor - uses idle loop
+    restart: unless-stopped
+
+  beta-app-3:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-beta-app-3
+    ports:
+      - "8086:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:BetaEnv2026!Secure@beta-db-primary:5432/cgas
+      - REDIS_URL=redis://beta-redis:6379
+      - ENVIRONMENT=beta
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=beta-app-3
+    depends_on:
+      beta-db-primary:
+        condition: service_healthy
+      beta-redis:
+        condition: service_healthy
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/beta-app-3:/app/logs
+    # No healthcheck for mock executor - uses idle loop
+    restart: unless-stopped
+
+  # ==================== 数据库 (主从复制 2 台) ====================
+  beta-db-primary:
+    image: postgres:15-alpine
+    container_name: cgas-beta-db-primary
+    environment:
+      POSTGRES_DB: cgas
+      POSTGRES_USER: cgas
+      POSTGRES_PASSWORD: BetaEnv2026!Secure
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - cgas_beta_primary_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cgas -d cgas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  beta-db-replica:
+    image: postgres:15-alpine
+    container_name: cgas-beta-db-replica
+    environment:
+      POSTGRES_DB: cgas
+      POSTGRES_USER: cgas
+      POSTGRES_PASSWORD: BetaEnv2026!Secure
+    ports:
+      - "5434:5432"
+    volumes:
+      - cgas_beta_replica_data:/var/lib/postgresql/data
+    depends_on:
+      beta-db-primary:
+        condition: service_healthy
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cgas -d cgas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== 缓存服务 ====================
+  beta-redis:
+    image: redis:7-alpine
+    container_name: cgas-beta-redis
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    ports:
+      - "6380:6379"
+    volumes:
+      - cgas_beta_redis:/data
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== 监控服务 ====================
+  beta-prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: cgas-beta-prometheus
+    ports:
+      - "9092:9090"
+    volumes:
+      - ./monitoring/prometheus.beta.yml:/etc/prometheus/prometheus.yml
+      - cgas_beta_prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    restart: unless-stopped
+
+  beta-grafana:
+    image: grafana/grafana:10.0.0
+    container_name: cgas-beta-grafana
+    ports:
+      - "3002:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=BetaGrafana2026
+    volumes:
+      - cgas_beta_grafana:/var/lib/grafana
+    depends_on:
+      - beta-prometheus
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    restart: unless-stopped
+
+  beta-node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: cgas-beta-node-exporter
+    ports:
+      - "9101:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - beta_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+# ==================== 网络和存储 ====================
+networks:
+  beta_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.29.0.0/16
+
+volumes:
+  cgas_beta_primary_data:
+    driver: local
+  cgas_beta_replica_data:
+    driver: local
+  cgas_beta_redis:
+    driver: local
+  cgas_beta_prometheus:
+    driver: local
+  cgas_beta_grafana:
+    driver: local

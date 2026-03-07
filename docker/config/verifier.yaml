@@ -1,0 +1,45 @@
+# CGAS Verifier Configuration - Alpha Environment
+# Version: v3.0.0-alpha
+
+environment: alpha
+log_level: info
+
+# Database Configuration
+database:
+  host: postgres
+  port: 5432
+  name: cgas
+  user: cgas
+  password: AlphaEnv2026!Secure
+  max_connections: 20
+  min_idle: 5
+
+# Redis Configuration
+redis:
+  host: redis
+  port: 6379
+  max_connections: 10
+
+# Verifier Configuration
+verifier:
+  mode: incremental
+  max_workers: 4
+  cache_size: 1000
+  timeout_ms: 30000
+
+# Executor Integration
+executor:
+  endpoint: http://executor:8080
+  timeout_ms: 10000
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus_port: 9090
+  metrics_path: /metrics
+
+# Health Check
+health:
+  enabled: true
+  port: 8080
+  path: /health

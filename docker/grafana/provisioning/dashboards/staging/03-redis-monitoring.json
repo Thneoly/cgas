@@ -1,0 +1,42 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "redis-monitoring",
+    "title": "Redis Monitoring",
+    "tags": ["staging", "redis"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Redis Up",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{"expr": "redis_up"}]
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Connected Clients",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{"expr": "redis_connected_clients"}]
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Memory Usage",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [{"expr": "redis_memory_used_bytes / 1024 / 1024"}]
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Hit Rate",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [{"expr": "redis_keyspace_hits_total / (redis_keyspace_hits_total + redis_keyspace_misses_total) * 100"}]
+      }
+    ]
+  }
+}

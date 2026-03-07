@@ -1,0 +1,221 @@
+groups:
+  - name: Staging Alerts
+    interval: 30s
+    rules:
+      # ==================== P0 严重告警 ====================
+      - alert: ServiceDown
+        expr: up == 0
+        for: 1m
+        labels:
+          severity: P0
+        annotations:
+          summary: "服务 {{ $labels.job }} 已宕机"
+          description: "{{ $labels.instance }} 服务已宕机超过 1 分钟"
+
+      - alert: HighCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 85
+        for: 5m
+        labels:
+          severity: P0
+        annotations:
+          summary: "CPU 使用率过高"
+          description: "{{ $labels.instance }} CPU 使用率超过 85%"
+
+      - alert: HighMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 85
+        for: 5m
+        labels:
+          severity: P0
+        annotations:
+          summary: "内存使用率过高"
+          description: "{{ $labels.instance }} 内存使用率超过 85%"
+
+      - alert: DiskSpaceLow
+        expr: (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) * 100 < 15
+        for: 5m
+        labels:
+          severity: P0
+        annotations:
+          summary: "磁盘空间不足"
+          description: "{{ $labels.instance }} 磁盘可用空间低于 15%"
+
+      - alert: PostgresDown
+        expr: pg_up == 0
+        for: 1m
+        labels:
+          severity: P0
+        annotations:
+          summary: "PostgreSQL 数据库已宕机"
+          description: "{{ $labels.instance }} PostgreSQL 数据库已宕机超过 1 分钟"
+
+      - alert: RedisDown
+        expr: redis_up == 0
+        for: 1m
+        labels:
+          severity: P0
+        annotations:
+          summary: "Redis 缓存已宕机"
+          description: "{{ $labels.instance }} Redis 缓存已宕机超过 1 分钟"
+
+      - alert: HighErrorRate
+        expr: rate(node_http_requests_total{code=~"5.."}[5m]) / rate(node_http_requests_total[5m]) > 0.05
+        for: 5m
+        labels:
+          severity: P0
+        annotations:
+          summary: "错误率过高"
+          description: "HTTP 5xx 错误率超过 5%"
+
+      - alert: ContainerRestarted
+        expr: time() - container_start_time_seconds < 300
+        for: 0m
+        labels:
+          severity: P0
+        annotations:
+          summary: "容器重启"
+          description: "容器 {{ $labels.name }} 在最近 5 分钟内重启"
+
+      # ==================== P1 警告告警 ====================
+      - alert: MediumCPUUsage
+        expr: 100 - (avg by(instance) (irate(node_cpu_seconds_total{mode="idle"}[5m])) * 100) > 70
+        for: 10m
+        labels:
+          severity: P1
+        annotations:
+          summary: "CPU 使用率警告"
+          description: "{{ $labels.instance }} CPU 使用率超过 70%"
+
+      - alert: MediumMemoryUsage
+        expr: (1 - (node_memory_MemAvailable_bytes / node_memory_MemTotal_bytes)) * 100 > 70
+        for: 10m
+        labels:
+          severity: P1
+        annotations:
+          summary: "内存使用率警告"
+          description: "{{ $labels.instance }} 内存使用率超过 70%"
+
+      - alert: DiskSpaceWarning
+        expr: (node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"}) * 100 < 25
+        for: 10m
+        labels:
+          severity: P1
+        annotations:
+          summary: "磁盘空间警告"
+          description: "{{ $labels.instance }} 磁盘可用空间低于 25%"
+
+      - alert: HighLoadAverage
+        expr: node_load1 > 4
+        for: 10m
+        labels:
+          severity: P1
+        annotations:
+          summary: "系统负载过高"
+          description: "{{ $labels.instance }} 1 分钟负载超过 4"
+
+      - alert: PostgresConnectionsHigh
+        expr: pg_stat_activity_count > 50
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "PostgreSQL 连接数过高"
+          description: "{{ $labels.instance }} PostgreSQL 连接数超过 50"
+
+      - alert: RedisMemoryHigh
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.8
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Redis 内存使用过高"
+          description: "{{ $labels.instance }} Redis 内存使用超过 80%"
+
+      - alert: NginxHighConnections
+        expr: nginx_connections_active > 1000
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Nginx 活跃连接数过高"
+          description: "{{ $labels.instance }} Nginx 活跃连接数超过 1000"
+
+      - alert: PrometheusTargetScrapeFailed
+        expr: up == 0
+        for: 2m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Prometheus 目标抓取失败"
+          description: "{{ $labels.job }}/{{ $labels.instance }} 抓取失败超过 2 分钟"
+
+      - alert: PrometheusNotificationQueueGrowing
+        expr: rate(prometheus_notifications_queue_length[5m]) > 0
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Prometheus 通知队列增长"
+          description: "Prometheus 通知队列正在增长"
+
+      - alert: GrafanaDatasourceError
+        expr: increase(grafana_datasource_request_error_total[5m]) > 0
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Grafana 数据源错误"
+          description: "Grafana 数据源请求错误"
+
+      - alert: NodeClockSkew
+        expr: abs(node_timex_offset_seconds) > 0.05
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "节点时钟偏差"
+          description: "{{ $labels.instance }} 节点时钟偏差超过 50ms"
+
+      - alert: NodeNetworkReceiveErrors
+        expr: rate(node_network_receive_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "网络接收错误"
+          description: "{{ $labels.instance }} 网络接收错误率过高"
+
+      - alert: NodeNetworkTransmitErrors
+        expr: rate(node_network_transmit_errs_total[5m]) > 10
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "网络发送错误"
+          description: "{{ $labels.instance }} 网络发送错误率过高"
+
+      - alert: PostgresReplicationLag
+        expr: pg_replication_lag > 30
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "PostgreSQL 复制延迟"
+          description: "{{ $labels.instance }} PostgreSQL 复制延迟超过 30 秒"
+
+      - alert: RedisKeyEviction
+        expr: increase(redis_evicted_keys_total[5m]) > 100
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Redis 键驱逐"
+          description: "{{ $labels.instance }} Redis 驱逐键数超过 100"
+
+      - alert: NginxHighRequestRate
+        expr: rate(nginx_requests_total[1m]) > 500
+        for: 5m
+        labels:
+          severity: P1
+        annotations:
+          summary: "Nginx 请求率过高"
+          description: "{{ $labels.instance }} Nginx 请求率超过 500 req/s"

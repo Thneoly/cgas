@@ -1,0 +1,49 @@
+{
+  "blackboard_version": 7,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 7,
+    "sample_size": 7,
+    "source": "blackboard-agent",
+    "window": "round-1"
+  },
+  "next_role": "SRE",
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# Security deliverable\n\n- release_id: release-2026-04-01-alpha-alpha-week1\n- generated_by: mock-openclaw\n\n上下文说明：\n- 当前阶段：Alpha Week 1。\n- 你不需要自行在文件系统查找文档。\n- 以下已提供本地文档摘录，直接基于摘录执行。\n- role 字段必须使用 PM/Dev/QA/Security/SRE 之一。\n- 你必须输出 deliverables: [{path, content}]，path 必须使用给定目标路径。\n\n任务：以 Security 身份输出本周安全审查结论、红线风险与阻断覆盖。\n目标交付路径：alpha_week1_security_report.md\n\n[phase1_submission_gate_rules 摘录]\n## 2. 核心规则\n\n1. 所有交付物必须通过 Gate 验证\n2. 测试通过率必须≥95%\n3. P99 时延必须<250ms\n4. 零高危漏洞\n\n\n## 3. 判定口径\n\n- Go: 所有指标达标\n- Conditional Go: 1 项不达标但有缓解计划\n- No-Go: 2 项或以上不达标\n\n\n## 4. 例外策略\n\n特殊情况需要门禁官批准。\n\n\n## 5. 审计要求\n\n所有决策必须有证据支持。\n\n\n\n[协作上下文]\n当前轮次: 1\n你必须吸收以下跨角色反馈并在本轮输出里体现闭环：\n- 来自PM: decision=approved, summary=PM executed prompt \n- 来自Dev: decision=approved, summary=Dev executed prompt \n- 来自QA: decision=approved, summary=QA executed prompt ",
+        "path": "alpha_week1_security_report.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": 0.98,
+      "sample_size": 120,
+      "source": "mock-openclaw",
+      "window": "14d"
+    },
+    "evidence_refs": {
+      "artifact_version": "v2",
+      "risk_evidence": "gate_rules_v1",
+      "skill_evidence": "prompt_contract_v2"
+    },
+    "next_role": "SRE",
+    "prompt_hash": "len:1179",
+    "release_id": "release-2026-04-01-alpha-alpha-week1",
+    "risk_controls": [
+      "gate_alignment",
+      "evidence_traceability"
+    ],
+    "role": "Security",
+    "skills_applied": [
+      "pmp_baseline",
+      "security_role_skill"
+    ],
+    "summary": "Security executed prompt"
+  },
+  "release_id": "release-2026-04-01-alpha-alpha-week1",
+  "role": "Blackboard",
+  "source_role": "Security",
+  "summary": "blackboard merged artifact from Security and broadcast feedback"
+}

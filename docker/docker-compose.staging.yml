@@ -1,0 +1,415 @@
+version: '3.8'
+
+# CGAS Staging Environment - 9 节点集群模拟
+# 5 应用服务器 + 2 数据库 + 2 负载均衡器 (单容器模拟多节点)
+
+services:
+  # ==================== 负载均衡器 (2 台 HA) ====================
+  nginx-lb-1:
+    image: nginx:1.24-alpine
+    container_name: cgas-staging-lb-1
+    ports:
+      - "8092:80"
+    volumes:
+      - ./nginx/staging-lb-1.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - staging-app-1
+      - staging-app-2
+      - staging-app-3
+      - staging-app-4
+      - staging-app-5
+    networks:
+      - staging_network
+    restart: unless-stopped
+
+  nginx-lb-2:
+    image: nginx:1.24-alpine
+    container_name: cgas-staging-lb-2
+    ports:
+      - "8093:80"
+    volumes:
+      - ./nginx/staging-lb-2.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - staging-app-1
+      - staging-app-2
+      - staging-app-3
+      - staging-app-4
+      - staging-app-5
+    networks:
+      - staging_network
+    restart: unless-stopped
+
+  # ==================== 应用服务器 (5 台) ====================
+  staging-app-1:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-staging-app-1
+    ports:
+      - "8094:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:StagingEnv2026!Secure@staging-db-primary:5432/cgas
+      - REDIS_URL=redis://staging-redis:6379
+      - ENVIRONMENT=staging
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=staging-app-1
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+      staging-redis:
+        condition: service_healthy
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/staging-app-1:/app/logs
+    restart: unless-stopped
+
+  # Metrics Exporter for App-1 (模拟应用指标)
+  staging-app-1-metrics:
+    image: cgas-metrics:latest
+    container_name: cgas-staging-app-1-metrics
+    ports:
+      - "8194:8080"
+    environment:
+      - ENVIRONMENT=staging
+      - APP_NODE_ID=staging-app-1
+    networks:
+      - staging_network
+    restart: unless-stopped
+
+  staging-app-2:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-staging-app-2
+    ports:
+      - "8095:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:StagingEnv2026!Secure@staging-db-primary:5432/cgas
+      - REDIS_URL=redis://staging-redis:6379
+      - ENVIRONMENT=staging
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=staging-app-2
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+      staging-redis:
+        condition: service_healthy
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/staging-app-2:/app/logs
+    restart: unless-stopped
+
+  staging-app-3:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-staging-app-3
+    ports:
+      - "8096:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:StagingEnv2026!Secure@staging-db-primary:5432/cgas
+      - REDIS_URL=redis://staging-redis:6379
+      - ENVIRONMENT=staging
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=staging-app-3
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+      staging-redis:
+        condition: service_healthy
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/staging-app-3:/app/logs
+    restart: unless-stopped
+
+  staging-app-4:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-staging-app-4
+    ports:
+      - "8097:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:StagingEnv2026!Secure@staging-db-primary:5432/cgas
+      - REDIS_URL=redis://staging-redis:6379
+      - ENVIRONMENT=staging
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=staging-app-4
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+      staging-redis:
+        condition: service_healthy
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/staging-app-4:/app/logs
+    restart: unless-stopped
+
+  staging-app-5:
+    build:
+      context: ..
+      dockerfile: docker/Executor.Dockerfile
+    container_name: cgas-staging-app-5
+    ports:
+      - "8098:8080"
+    environment:
+      - RUST_LOG=info
+      - DATABASE_URL=postgresql://cgas:StagingEnv2026!Secure@staging-db-primary:5432/cgas
+      - REDIS_URL=redis://staging-redis:6379
+      - ENVIRONMENT=staging
+      - SERVICE_NAME=executor
+      - APP_NODE_ID=staging-app-5
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+      staging-redis:
+        condition: service_healthy
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    volumes:
+      - ./logs/staging-app-5:/app/logs
+    restart: unless-stopped
+
+  # ==================== 数据库 (主从复制 2 台) ====================
+  staging-db-primary:
+    image: postgres:15-alpine
+    container_name: cgas-staging-db-primary
+    environment:
+      POSTGRES_DB: cgas
+      POSTGRES_USER: cgas
+      POSTGRES_PASSWORD: StagingEnv2026!Secure
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=C --lc-ctype=C"
+    ports:
+      - "5443:5432"
+    volumes:
+      - cgas_staging_primary_data:/var/lib/postgresql/data
+      - ./scripts/init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cgas -d cgas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  staging-db-replica:
+    image: postgres:15-alpine
+    container_name: cgas-staging-db-replica
+    environment:
+      POSTGRES_DB: cgas
+      POSTGRES_USER: cgas
+      POSTGRES_PASSWORD: StagingEnv2026!Secure
+    ports:
+      - "5444:5432"
+    volumes:
+      - cgas_staging_replica_data:/var/lib/postgresql/data
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '4.0'
+          memory: 8G
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cgas -d cgas"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== 缓存服务 ====================
+  staging-redis:
+    image: redis:7-alpine
+    container_name: cgas-staging-redis
+    command: redis-server --appendonly yes --maxmemory 2gb --maxmemory-policy allkeys-lru
+    ports:
+      - "6390:6379"
+    volumes:
+      - cgas_staging_redis:/data
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ==================== Exporters ====================
+  # PostgreSQL Exporter
+  staging-postgres-exporter:
+    image: prometheuscommunity/postgres-exporter:v0.15.0
+    container_name: cgas-staging-postgres-exporter
+    environment:
+      - DATA_SOURCE_NAME=postgresql://cgas:StagingEnv2026!Secure@staging-db-primary:5432/cgas?sslmode=disable
+    ports:
+      - "9187:9187"
+    depends_on:
+      staging-db-primary:
+        condition: service_healthy
+    networks:
+      - staging_network
+    restart: unless-stopped
+
+  # Redis Exporter
+  staging-redis-exporter:
+    image: oliver006/redis_exporter:latest
+    container_name: cgas-staging-redis-exporter
+    command: -redis.addr=redis://staging-redis:6379
+    ports:
+      - "9121:9121"
+    depends_on:
+      staging-redis:
+        condition: service_healthy
+    networks:
+      - staging_network
+    restart: unless-stopped
+
+  # Nginx Exporter (for LB-1)
+  staging-nginx-exporter:
+    image: nginx/nginx-prometheus-exporter:latest
+    container_name: cgas-staging-nginx-exporter
+    command: -nginx.scrape-uri=http://172.30.0.13:80/stub_status
+    ports:
+      - "9113:9113"
+    networks:
+      - staging_network
+    restart: unless-stopped
+
+  # ==================== 监控服务 ====================
+  staging-prometheus:
+    image: prom/prometheus:v2.45.0
+    container_name: cgas-staging-prometheus
+    ports:
+      - "9093:9090"
+    volumes:
+      - ./monitoring/prometheus.staging.yml:/etc/prometheus/prometheus.yml
+      - ./prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+      - cgas_staging_prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=7d'
+      - '--web.enable-lifecycle'
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 4G
+    restart: unless-stopped
+
+  staging-grafana:
+    image: grafana/grafana:10.0.0
+    container_name: cgas-staging-grafana
+    ports:
+      - "3003:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=StagingGrafana2026
+      - GF_AUTH_ANONYMOUS_ENABLED=false
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - cgas_staging_grafana:/var/lib/grafana
+      - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources:ro
+      - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards:ro
+    depends_on:
+      - staging-prometheus
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    restart: unless-stopped
+
+  staging-node-exporter:
+    image: prom/node-exporter:v1.6.0
+    container_name: cgas-staging-node-exporter
+    ports:
+      - "9102:9100"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - staging_network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 512M
+    restart: unless-stopped
+
+# ==================== 网络和存储 ====================
+networks:
+  staging_network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.30.0.0/16
+
+volumes:
+  cgas_staging_primary_data:
+    driver: local
+  cgas_staging_replica_data:
+    driver: local
+  cgas_staging_redis:
+    driver: local
+  cgas_staging_prometheus:
+    driver: local
+  cgas_staging_grafana:
+    driver: local

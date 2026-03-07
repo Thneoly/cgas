@@ -1,0 +1,35 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "nginx-monitoring",
+    "title": "Nginx Load Balancer",
+    "tags": ["staging", "nginx"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Active Connections",
+        "gridPos": {"h": 4, "w": 8, "x": 0, "y": 0},
+        "targets": [{"expr": "nginx_connections_active"}]
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Requests/sec",
+        "gridPos": {"h": 4, "w": 8, "x": 8, "y": 0},
+        "targets": [{"expr": "rate(nginx_requests_total[1m])"}]
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Handled Connections",
+        "gridPos": {"h": 4, "w": 8, "x": 16, "y": 0},
+        "targets": [{"expr": "nginx_connections_handled"}]
+      }
+    ]
+  }
+}

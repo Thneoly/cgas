@@ -1,0 +1,9 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+COPY metrics/app_metrics.py /app/metrics.py
+
+EXPOSE 8080
+
+CMD ["python", "metrics.py"]

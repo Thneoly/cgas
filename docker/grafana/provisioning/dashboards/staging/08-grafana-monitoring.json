@@ -1,0 +1,42 @@
+{
+  "dashboard": {
+    "id": null,
+    "uid": "grafana-monitoring",
+    "title": "Grafana Monitoring",
+    "tags": ["staging", "grafana"],
+    "timezone": "browser",
+    "schemaVersion": 38,
+    "version": 1,
+    "refresh": "10s",
+    "panels": [
+      {
+        "id": 1,
+        "type": "stat",
+        "title": "Datasources",
+        "gridPos": {"h": 4, "w": 6, "x": 0, "y": 0},
+        "targets": [{"expr": "grafana_datasources"}]
+      },
+      {
+        "id": 2,
+        "type": "stat",
+        "title": "Active Users",
+        "gridPos": {"h": 4, "w": 6, "x": 6, "y": 0},
+        "targets": [{"expr": "grafana_stat_total_users"}]
+      },
+      {
+        "id": 3,
+        "type": "stat",
+        "title": "Total Dashboards",
+        "gridPos": {"h": 4, "w": 6, "x": 12, "y": 0},
+        "targets": [{"expr": "grafana_stat_total_dashboards"}]
+      },
+      {
+        "id": 4,
+        "type": "stat",
+        "title": "Total Panels",
+        "gridPos": {"h": 4, "w": 6, "x": 18, "y": 0},
+        "targets": [{"expr": "grafana_stat_total_panels"}]
+      }
+    ]
+  }
+}

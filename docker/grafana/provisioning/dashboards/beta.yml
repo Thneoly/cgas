@@ -1,0 +1,13 @@
+apiVersion: 1
+
+providers:
+  - name: 'Beta Dashboards'
+    orgId: 1
+    folder: 'Beta'
+    folderUid: 'beta'
+    type: file
+    disableDeletion: false
+    updateIntervalSeconds: 30
+    allowUiUpdates: true
+    options:
+      path: /etc/grafana/provisioning/dashboards/beta

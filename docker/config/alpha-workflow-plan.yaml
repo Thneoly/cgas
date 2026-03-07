@@ -1,0 +1,41 @@
+# CGAS Alpha Environment Workflow Plan
+# Version: v3.0.0-alpha
+
+release_prefix: release-2026-04-01-alpha
+deliverables_root: /app/data/deliverables
+runtime_artifacts_root: /app/data/artifacts
+prompt_pack_fallback_path: /app/config/phase1_execution_prompt_pack.md
+gate_rules_path: /app/config/phase1_submission_gate_rules_v1.md
+
+board_headings:
+  - "## 本周目标"
+  - "## 任务表"
+  - "## 角色启动指令"
+  - "## 周末验收清单"
+
+gate_headings:
+  - "## 2. 核心规则"
+  - "## 3. 判定口径"
+  - "## 4. 例外策略"
+  - "## 5. 审计要求"
+
+stages:
+  - id: alpha-week1
+    context_label: Alpha Week 1
+    week_hint: 1
+    max_steps: 30
+    initial_roles:
+      - PM
+      - Dev
+      - QA
+      - Security
+      - SRE
+    gates:
+      - artifact_skill_execution
+      - pm_dev_qa_approved
+    deliverable_paths:
+      PM: alpha_week1_pm_report.md
+      Dev: alpha_week1_dev_report.md
+      QA: alpha_week1_qa_report.md
+      Security: alpha_week1_security_report.md
+      SRE: alpha_week1_sre_report.md

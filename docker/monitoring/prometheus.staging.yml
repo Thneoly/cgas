@@ -1,0 +1,38 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+rule_files:
+  - /etc/prometheus/alerts.yml
+
+scrape_configs:
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Node Exporter - 系统指标
+  - job_name: 'staging-node-exporter'
+    static_configs:
+      - targets: ['staging-node-exporter:9100']
+
+  # PostgreSQL Exporter - 数据库指标
+  - job_name: 'staging-postgres-exporter'
+    static_configs:
+      - targets: ['staging-postgres-exporter:9187']
+
+  # Redis Exporter - 缓存指标
+  - job_name: 'staging-redis-exporter'
+    static_configs:
+      - targets: ['staging-redis-exporter:9121']
+
+  # Nginx Exporter - 负载均衡指标
+  - job_name: 'staging-nginx-exporter'
+    static_configs:
+      - targets: ['staging-nginx-exporter:9113']
+
+  # Application Metrics - 应用指标
+  - job_name: 'staging-app-metrics'
+    static_configs:
+      - targets: [
+          'staging-app-1-metrics:8080'
+        ]

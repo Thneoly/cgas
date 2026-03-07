@@ -32,19 +32,21 @@ impl std::fmt::Display for TransactionStatus {
     }
 }
 
-/// 隔离级别 (Phase 2 仅支持 RC)
+/// 隔离级别 (Phase 3 扩展支持 RR)
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
 pub enum IsolationLevel {
     /// Read Committed (Phase 2)
     ReadCommitted,
-    // RepeatableRead,  // Phase 3 扩展
-    // Serializable,    // Phase 3 扩展
+    /// Repeatable Read (Phase 3)
+    RepeatableRead,
+    // Serializable,    // 未来扩展
 }
 
 impl std::fmt::Display for IsolationLevel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             IsolationLevel::ReadCommitted => write!(f, "READ_COMMITTED"),
+            IsolationLevel::RepeatableRead => write!(f, "REPEATABLE_READ"),
         }
     }
 }

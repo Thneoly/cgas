@@ -1,0 +1,216 @@
+// Batch 嵌套指令服务 gRPC 定义
+// Phase 3 扩展服务
+
+syntax = "proto3";
+
+package cgas.batch;
+
+import "executor.proto";
+
+// Batch 状态
+enum BatchStatus {
+  BATCH_STATUS_UNSPECIFIED = 0;
+  BATCH_STATUS_SUCCESS = 1;
+  BATCH_STATUS_FAILED = 2;
+  BATCH_STATUS_PARTIAL_FAILURE = 3;
+}
+
+// 指令类型（支持普通指令或嵌套 Batch）
+enum InstructionType {
+  INSTRUCTION_TYPE_UNSPECIFIED = 0;
+  INSTRUCTION_TYPE_SIMPLE = 1;
+  INSTRUCTION_TYPE_NESTED = 2;
+}
+
+// ==================== 简单指令 ====================
+
+// 简单执行指令（包装 ExecuteRequest）
+message SimpleInstruction {
+  // 底层执行请求
+  cgas.executor.ExecuteRequest request = 1;
+}
+
+// ==================== 嵌套 Batch 指令 ====================
+
+// 嵌套 Batch 指令
+message NestedBatchInstruction {
+  // 嵌套 Batch 的唯一标识
+  string nested_batch_id = 1;
+  // 嵌套 Batch 的 trace ID
+  string trace_id = 2;
+  // 嵌套层级深度
+  uint32 depth = 3;
+  // 是否原子执行
+  bool atomic = 4;
+  // 嵌套 Batch 内的指令列表
+  repeated BatchInstruction instructions = 5;
+}
+
+// Batch 指令（支持简单指令或嵌套 Batch）
+message BatchInstruction {
+  // 指令类型
+  InstructionType type = 1;
+  
+  // 简单指令
+  SimpleInstruction simple = 2;
+  
+  // 嵌套 Batch 指令
+  NestedBatchInstruction nested = 3;
+}
+
+// ==================== Batch 执行 ====================
+
+// Batch 执行请求
+message BatchExecuteRequest {
+  // Batch trace ID
+  string trace_id = 1;
+  // Batch 唯一标识
+  string batch_id = 2;
+  // 要执行的指令列表（支持嵌套）
+  repeated BatchInstruction instructions = 3;
+  // 是否原子执行（全部成功或全部失败）
+  bool atomic = 4;
+  // 最大嵌套深度限制
+  uint32 max_depth = 5;
+  // 请求时间戳 (RFC3339)
+  string timestamp = 6;
+  // 父 Batch ID（顶层为空）
+  string parent_batch_id = 7;
+  // 当前嵌套深度
+  uint32 current_depth = 8;
+}
+
+// 执行结果
+message ExecutionResult {
+  // 执行 ID
+  string execution_id = 1;
+  // 执行状态
+  cgas.executor.ExecutionStatus status = 2;
+  // 执行结果数据
+  string result_data = 3;
+  // 错误信息（失败时）
+  string error_message = 4;
+  // 执行时间戳
+  string timestamp = 5;
+}
+
+// 嵌套 Batch 执行结果
+message NestedBatchResult {
+  // 嵌套 Batch ID
+  string batch_id = 1;
+  // 嵌套深度
+  uint32 depth = 2;
+  // 执行状态
+  BatchStatus status = 3;
+  // 执行结果
+  repeated ExecutionResult results = 4;
+  // 嵌套哈希
+  string batch_hash = 5;
+  // 子嵌套结果（递归）
+  repeated NestedBatchResult nested_results = 6;
+}
+
+// Batch 执行响应
+message BatchExecuteResponse {
+  // Batch trace ID
+  string trace_id = 1;
+  // Batch 唯一标识
+  string batch_id = 2;
+  // Batch 状态
+  BatchStatus status = 3;
+  // 指令执行结果（扁平化）
+  repeated ExecutionResult results = 4;
+  // 嵌套执行结果（层级结构）
+  repeated NestedBatchResult nested_results = 5;
+  // Batch 哈希
+  string batch_hash = 6;
+  // 累积的 state_diff
+  repeated cgas.executor.StateDiffOperation accumulated_diff = 7;
+  // 响应时间戳 (RFC3339)
+  string timestamp = 8;
+  // 执行的总指令数
+  uint32 total_instructions = 9;
+  // 最大嵌套深度
+  uint32 max_depth_reached = 10;
+}
+
+// ==================== Batch 验证 ====================
+
+// Batch 哈希验证请求
+message VerifyBatchHashRequest {
+  // Batch trace ID
+  string trace_id = 1;
+  // Batch 唯一标识
+  string batch_id = 2;
+  // 指令列表
+  repeated BatchInstruction instructions = 3;
+  // 执行结果
+  repeated ExecutionResult results = 4;
+  // 期望的哈希值
+  string expected_hash = 5;
+}
+
+// Batch 哈希验证响应
+message VerifyBatchHashResponse {
+  // 验证是否通过
+  bool valid = 1;
+  // 计算得到的哈希
+  string computed_hash = 2;
+  // 错误信息（验证失败时）
+  string error_message = 3;
+}
+
+// ==================== Batch 查询 ====================
+
+// 获取 Batch 状态请求
+message GetBatchStatusRequest {
+  // Batch ID
+  string batch_id = 1;
+  // 是否包含嵌套详情
+  bool include_nested = 2;
+}
+
+// Batch 状态信息
+message BatchStatusInfo {
+  // Batch ID
+  string batch_id = 1;
+  // Trace ID
+  string trace_id = 2;
+  // 执行状态
+  BatchStatus status = 3;
+  // 创建时间
+  string created_at = 4;
+  // 完成时间
+  string completed_at = 5;
+  // 总指令数
+  uint32 total_instructions = 6;
+  // 成功指令数
+  uint32 successful_instructions = 7;
+  // 失败指令数
+  uint32 failed_instructions = 8;
+  // 最大嵌套深度
+  uint32 max_depth = 9;
+  // Batch 哈希
+  string batch_hash = 10;
+}
+
+// 获取 Batch 状态响应
+message GetBatchStatusResponse {
+  // Batch 状态信息
+  BatchStatusInfo status = 1;
+  // 嵌套状态（如果请求）
+  repeated BatchStatusInfo nested_status = 2;
+}
+
+// ==================== Batch 服务 ====================
+
+service BatchService {
+  // 执行 Batch（支持嵌套）
+  rpc BatchExecute(BatchExecuteRequest) returns (BatchExecuteResponse);
+  
+  // 验证 Batch 哈希
+  rpc VerifyBatchHash(VerifyBatchHashRequest) returns (VerifyBatchHashResponse);
+  
+  // 获取 Batch 状态
+  rpc GetBatchStatus(GetBatchStatusRequest) returns (GetBatchStatusResponse);
+}

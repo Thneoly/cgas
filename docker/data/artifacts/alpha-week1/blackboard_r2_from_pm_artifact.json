@@ -1,0 +1,49 @@
+{
+  "blackboard_version": 10,
+  "decision": "approved",
+  "event_type": "artifact_published",
+  "evidence": {
+    "metric_value": 10,
+    "sample_size": 10,
+    "source": "blackboard-agent",
+    "window": "round-2"
+  },
+  "next_role": "Dev",
+  "normalized": {
+    "decision": "approved",
+    "deliverables": [
+      {
+        "content": "# PM deliverable\n\n- release_id: release-2026-04-01-alpha-alpha-week1\n- generated_by: mock-openclaw\n\n上下文说明：\n- 当前阶段：Alpha Week 1。\n- 你不需要自行在文件系统查找文档。\n- 以下已提供本地文档摘录，直接基于摘录执行。\n- role 字段必须使用 PM/Dev/QA/Security/SRE 之一。\n- 你必须输出 deliverables: [{path, content}]，path 必须使用给定目标路径。\n\n任务：以 PM 身份输出本周执行结论、风险与下周准入条件。\n目标交付路径：alpha_week1_pm_report.md\n\n[execution_board 摘录]\n# Phase 1 Execution Prompt Pack (Alpha Environment)\n\n## 使用说明\n\n本 prompt pack 用于 Alpha 环境的执行板 fallback。\n\n## 角色提示\n\n### PM\n你是 Alpha 环境产品经理 (PM)。聚焦范围冻结、非目标、Gate 指标映射、跨项目依赖统筹与风险收敛。\n\n### Dev\n你是 Alpha 环境架构/开发角色。聚焦 ADR、接口契约、失败路径与回滚路径。\n\n### QA\n你是 Alpha 环境 QA。聚焦测试矩阵、样本策略与指标证据四元组。\n\n### Security\n你是 Alpha 环境安全工程师。聚焦提交闸门红线、非确定性风险与阻断覆盖结论。\n\n### SRE\n你是 Alpha 环境 SRE。聚焦执行看板、关键路径、阻塞项与开工条件。\n\n## 执行要求\n\n1. 输出必须是有效的 JSON\n2. 必须包含 deliverables 数组\n3. decision 只能是 approved 或 rejected\n4. 必须提供证据指标\n\n\n[协作上下文]\n当前轮次: 2\n你必须吸收以下跨角色反馈并在本轮输出里体现闭环：\n- 来自Dev: decision=approved, summary=Dev executed prompt \n- 来自QA: decision=approved, summary=QA executed prompt \n- 来自Security: decision=approved, summary=Security executed prompt \n- 来自SRE: decision=approved, summary=SRE executed prompt ",
+        "path": "alpha_week1_pm_report.md"
+      }
+    ],
+    "evidence": {
+      "metric_value": 0.98,
+      "sample_size": 120,
+      "source": "mock-openclaw",
+      "window": "14d"
+    },
+    "evidence_refs": {
+      "artifact_version": "v2",
+      "risk_evidence": "gate_rules_v1",
+      "skill_evidence": "prompt_contract_v2"
+    },
+    "next_role": "Dev",
+    "prompt_hash": "len:1701",
+    "release_id": "release-2026-04-01-alpha-alpha-week1",
+    "risk_controls": [
+      "gate_alignment",
+      "evidence_traceability"
+    ],
+    "role": "PM",
+    "skills_applied": [
+      "pmp_baseline",
+      "pm_role_skill"
+    ],
+    "summary": "PM executed prompt"
+  },
+  "release_id": "release-2026-04-01-alpha-alpha-week1",
+  "role": "Blackboard",
+  "source_role": "PM",
+  "summary": "blackboard merged artifact from PM and broadcast feedback"
+}

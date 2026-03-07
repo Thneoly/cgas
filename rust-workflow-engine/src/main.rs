@@ -5,6 +5,7 @@ mod error;
 mod executor;
 mod gate_report;
 mod gates;
+mod metrics;
 mod model;
 mod workflow_plan;
 

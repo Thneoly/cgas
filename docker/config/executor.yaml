@@ -1,0 +1,53 @@
+# CGAS Executor Configuration - Alpha Environment
+# Version: v3.0.0-alpha
+
+environment: alpha
+log_level: info
+
+# Database Configuration
+database:
+  host: postgres
+  port: 5432
+  name: cgas
+  user: cgas
+  password: AlphaEnv2026!Secure
+  max_connections: 20
+  min_idle: 5
+
+# Redis Configuration
+redis:
+  host: redis
+  port: 6379
+  max_connections: 10
+
+# Executor Configuration
+executor:
+  mode: cli
+  max_workers: 4
+  queue_size: 100
+  timeout_ms: 30000
+
+# Verifier Configuration
+verifier:
+  enabled: true
+  endpoint: http://verifier:8080
+  timeout_ms: 10000
+
+# OpenClaw Integration
+openclaw:
+  enabled: true
+  mode: mock
+  endpoint: http://host.docker.internal:18888
+  timeout_ms: 60000
+
+# Monitoring
+monitoring:
+  enabled: true
+  prometheus_port: 9090
+  metrics_path: /metrics
+
+# Health Check
+health:
+  enabled: true
+  port: 8080
+  path: /health
