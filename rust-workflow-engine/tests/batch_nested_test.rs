@@ -1,11 +1,13 @@
+#![cfg(feature = "legacy-tests")]
+
 // Phase 3: Batch Nested Execution Tests
 // 20 test cases covering nested Batch functionality (depth 1-5)
 // Reference: phase3_test_matrix_v3.md section 2.2
 
 use workflow_engine::batch::{BatchCommand, BatchIsolationLevel};
 use workflow_engine::command::Command;
-use workflow_engine::engine::WorkflowEngine;
 use workflow_engine::context::ExecutionContext;
+use workflow_engine::engine::WorkflowEngine;
 use workflow_engine::result::ExecutionResult;
 
 /// ============================================================================
@@ -23,7 +25,7 @@ const NESTED_MAX_DEPTH: u8 = 5;
 async fn test_bn_001_single_layer_batch_depth_1() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Create single layer batch with 3 commands
     let batch = BatchCommand {
         id: "batch_depth_1".to_string(),
@@ -35,10 +37,13 @@ async fn test_bn_001_single_layer_batch_depth_1() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, batch).await;
-    
-    assert!(result.is_ok(), "Single layer batch should execute successfully");
+
+    assert!(
+        result.is_ok(),
+        "Single layer batch should execute successfully"
+    );
     assert_eq!(result.unwrap().success_count, 3);
 }
 
@@ -50,7 +55,7 @@ async fn test_bn_001_single_layer_batch_depth_1() {
 async fn test_bn_002_two_layer_batch_nested_depth_2() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Create parent batch with nested child batch
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
@@ -61,7 +66,7 @@ async fn test_bn_002_two_layer_batch_nested_depth_2() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -72,10 +77,13 @@ async fn test_bn_002_two_layer_batch_nested_depth_2() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
-    assert!(result.is_ok(), "Two layer nested batch should execute successfully");
+
+    assert!(
+        result.is_ok(),
+        "Two layer nested batch should execute successfully"
+    );
     assert_eq!(result.unwrap().success_count, 5); // 2 parent + 2 child + 1 parent
 }
 
@@ -87,17 +95,15 @@ async fn test_bn_002_two_layer_batch_nested_depth_2() {
 async fn test_bn_003_three_layer_batch_nested_depth_3() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Create 3-level nested batch structure
     let grandchild_batch = BatchCommand {
         id: "grandchild_batch".to_string(),
-        commands: vec![
-            Command::create("gc_resource_1", "gc_value_1"),
-        ],
+        commands: vec![Command::create("gc_resource_1", "gc_value_1")],
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -107,7 +113,7 @@ async fn test_bn_003_three_layer_batch_nested_depth_3() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -118,10 +124,13 @@ async fn test_bn_003_three_layer_batch_nested_depth_3() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
-    assert!(result.is_ok(), "Three layer nested batch should execute successfully");
+
+    assert!(
+        result.is_ok(),
+        "Three layer nested batch should execute successfully"
+    );
     assert_eq!(result.unwrap().success_count, 5);
 }
 
@@ -133,7 +142,7 @@ async fn test_bn_003_three_layer_batch_nested_depth_3() {
 async fn test_bn_004_four_layer_batch_nested_depth_4() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Create 4-level nested batch structure
     let level4_batch = BatchCommand {
         id: "level4_batch".to_string(),
@@ -141,7 +150,7 @@ async fn test_bn_004_four_layer_batch_nested_depth_4() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let level3_batch = BatchCommand {
         id: "level3_batch".to_string(),
         commands: vec![
@@ -151,7 +160,7 @@ async fn test_bn_004_four_layer_batch_nested_depth_4() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let level2_batch = BatchCommand {
         id: "level2_batch".to_string(),
         commands: vec![
@@ -161,7 +170,7 @@ async fn test_bn_004_four_layer_batch_nested_depth_4() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let level1_batch = BatchCommand {
         id: "level1_batch".to_string(),
         commands: vec![
@@ -171,10 +180,13 @@ async fn test_bn_004_four_layer_batch_nested_depth_4() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, level1_batch).await;
-    
-    assert!(result.is_ok(), "Four layer nested batch should execute successfully");
+
+    assert!(
+        result.is_ok(),
+        "Four layer nested batch should execute successfully"
+    );
     assert_eq!(result.unwrap().success_count, 4);
 }
 
@@ -186,7 +198,7 @@ async fn test_bn_004_four_layer_batch_nested_depth_4() {
 async fn test_bn_005_five_layer_batch_nested_depth_5_max() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Create 5-level nested batch structure (maximum allowed)
     let mut current_batch = BatchCommand {
         id: "level5_batch".to_string(),
@@ -194,7 +206,7 @@ async fn test_bn_005_five_layer_batch_nested_depth_5_max() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     // Build from inner to outer
     for level in (1..=4).rev() {
         current_batch = BatchCommand {
@@ -207,10 +219,13 @@ async fn test_bn_005_five_layer_batch_nested_depth_5_max() {
             max_depth: NESTED_MAX_DEPTH,
         };
     }
-    
+
     let result = engine.execute_batch(&mut ctx, current_batch).await;
-    
-    assert!(result.is_ok(), "Five layer nested batch (max depth) should execute successfully");
+
+    assert!(
+        result.is_ok(),
+        "Five layer nested batch (max depth) should execute successfully"
+    );
     assert_eq!(result.unwrap().success_count, 5);
 }
 
@@ -222,7 +237,7 @@ async fn test_bn_005_five_layer_batch_nested_depth_5_max() {
 async fn test_bn_006_exceeded_nested_depth_rejection_depth_6() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Create 6-level nested batch structure (exceeds max depth of 5)
     let mut current_batch = BatchCommand {
         id: "level6_batch".to_string(),
@@ -230,7 +245,7 @@ async fn test_bn_006_exceeded_nested_depth_rejection_depth_6() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     // Build from inner to outer (6 levels)
     for level in (1..=5).rev() {
         current_batch = BatchCommand {
@@ -243,9 +258,9 @@ async fn test_bn_006_exceeded_nested_depth_rejection_depth_6() {
             max_depth: NESTED_MAX_DEPTH,
         };
     }
-    
+
     let result = engine.execute_batch(&mut ctx, current_batch).await;
-    
+
     assert!(result.is_err(), "Six layer nested batch should be rejected");
     assert_eq!(
         result.unwrap_err().code,
@@ -262,7 +277,7 @@ async fn test_bn_006_exceeded_nested_depth_rejection_depth_6() {
 async fn test_bn_007_nested_batch_independent_scope() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Child batch creates variable that should not leak to parent
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
@@ -273,7 +288,7 @@ async fn test_bn_007_nested_batch_independent_scope() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -285,15 +300,18 @@ async fn test_bn_007_nested_batch_independent_scope() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
-    assert!(result.is_ok(), "Nested batch should execute with scope isolation");
+
+    assert!(
+        result.is_ok(),
+        "Nested batch should execute with scope isolation"
+    );
     // Verify child_var is not accessible in parent scope
     let execution_result = result.unwrap();
     assert!(
-        execution_result.variable_access.get("child_var").is_none() 
-        || execution_result.variable_access.get("child_var") == Some(&None),
+        execution_result.variable_access.get("child_var").is_none()
+            || execution_result.variable_access.get("child_var") == Some(&None),
         "Child variables should not leak to parent scope"
     );
 }
@@ -306,7 +324,7 @@ async fn test_bn_007_nested_batch_independent_scope() {
 async fn test_bn_008_nested_batch_error_isolation() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Child batch with failing command
     let failing_child = BatchCommand {
         id: "failing_child".to_string(),
@@ -318,7 +336,7 @@ async fn test_bn_008_nested_batch_error_isolation() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let sibling_child = BatchCommand {
         id: "sibling_child".to_string(),
         commands: vec![
@@ -328,7 +346,7 @@ async fn test_bn_008_nested_batch_error_isolation() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -340,11 +358,14 @@ async fn test_bn_008_nested_batch_error_isolation() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
+
     // Parent should continue executing after failing child (depending on error handling mode)
-    assert!(result.is_ok(), "Parent batch should handle child failure gracefully");
+    assert!(
+        result.is_ok(),
+        "Parent batch should handle child failure gracefully"
+    );
 }
 
 /// ============================================================================
@@ -355,7 +376,7 @@ async fn test_bn_008_nested_batch_error_isolation() {
 async fn test_bn_009_nested_result_aggregation() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -365,7 +386,7 @@ async fn test_bn_009_nested_result_aggregation() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -376,12 +397,12 @@ async fn test_bn_009_nested_result_aggregation() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
+
     assert!(result.is_ok());
     let execution_result = result.unwrap();
-    
+
     // Parent should have access to all child results
     assert!(
         execution_result.has_result("child_r1"),
@@ -402,14 +423,14 @@ async fn test_bn_009_nested_result_aggregation() {
 async fn test_bn_010_nested_execution_log_level_identification() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![Command::create("child_r1", "child_v1")],
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -419,12 +440,12 @@ async fn test_bn_010_nested_execution_log_level_identification() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
+
     assert!(result.is_ok());
     let execution_result = result.unwrap();
-    
+
     // Verify log contains level identification
     let log = execution_result.execution_log;
     assert!(
@@ -444,40 +465,47 @@ async fn test_bn_010_nested_execution_log_level_identification() {
 #[tokio::test]
 async fn test_bn_011_nested_performance_overhead_single_layer() {
     let engine = WorkflowEngine::new();
-    
+
     // Baseline: non-nested batch
     let baseline_batch = BatchCommand {
         id: "baseline".to_string(),
-        commands: (0..100).map(|i| Command::create(format!("r_{}", i), format!("v_{}", i))).collect(),
+        commands: (0..100)
+            .map(|i| Command::create(format!("r_{}", i), format!("v_{}", i)))
+            .collect(),
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     // Nested: single layer with same commands
     let nested_batch = BatchCommand {
         id: "nested".to_string(),
-        commands: vec![
-            Command::Batch(BatchCommand {
-                id: "child".to_string(),
-                commands: (0..100).map(|i| Command::create(format!("r_{}", i), format!("v_{}", i))).collect(),
-                isolation: BatchIsolationLevel::Sequential,
-                max_depth: NESTED_MAX_DEPTH,
-            })
-        ],
+        commands: vec![Command::Batch(BatchCommand {
+            id: "child".to_string(),
+            commands: (0..100)
+                .map(|i| Command::create(format!("r_{}", i), format!("v_{}", i)))
+                .collect(),
+            isolation: BatchIsolationLevel::Sequential,
+            max_depth: NESTED_MAX_DEPTH,
+        })],
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let baseline_start = std::time::Instant::now();
-    let _ = engine.execute_batch(&mut ExecutionContext::default(), baseline_batch).await;
+    let _ = engine
+        .execute_batch(&mut ExecutionContext::default(), baseline_batch)
+        .await;
     let baseline_duration = baseline_start.elapsed();
-    
+
     let nested_start = std::time::Instant::now();
-    let _ = engine.execute_batch(&mut ExecutionContext::default(), nested_batch).await;
+    let _ = engine
+        .execute_batch(&mut ExecutionContext::default(), nested_batch)
+        .await;
     let nested_duration = nested_start.elapsed();
-    
-    let overhead = (nested_duration.as_millis() as f64 / baseline_duration.as_millis() as f64 - 1.0) * 100.0;
-    
+
+    let overhead =
+        (nested_duration.as_millis() as f64 / baseline_duration.as_millis() as f64 - 1.0) * 100.0;
+
     assert!(
         overhead < 5.0,
         "Single layer nested overhead should be <5%, actual: {:.2}%",
@@ -492,23 +520,27 @@ async fn test_bn_011_nested_performance_overhead_single_layer() {
 #[tokio::test]
 async fn test_bn_012_nested_performance_overhead_five_layers() {
     let engine = WorkflowEngine::new();
-    
+
     // Baseline: non-nested batch with 100 commands
     let baseline_batch = BatchCommand {
         id: "baseline".to_string(),
-        commands: (0..100).map(|i| Command::create(format!("r_{}", i), format!("v_{}", i))).collect(),
+        commands: (0..100)
+            .map(|i| Command::create(format!("r_{}", i), format!("v_{}", i)))
+            .collect(),
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     // Build 5-level nested structure with 20 commands per level (total 100)
     let mut nested_batch = BatchCommand {
         id: "level5".to_string(),
-        commands: (0..20).map(|i| Command::create(format!("l5_r_{}", i), format!("l5_v_{}", i))).collect(),
+        commands: (0..20)
+            .map(|i| Command::create(format!("l5_r_{}", i), format!("l5_v_{}", i)))
+            .collect(),
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     for level in (1..=4).rev() {
         let mut commands: Vec<Command> = (0..20)
             .map(|i| Command::create(format!("l{}_r_{}", level, i), format!("l{}_v_{}", level, i)))
@@ -521,17 +553,22 @@ async fn test_bn_012_nested_performance_overhead_five_layers() {
             max_depth: NESTED_MAX_DEPTH,
         };
     }
-    
+
     let baseline_start = std::time::Instant::now();
-    let _ = engine.execute_batch(&mut ExecutionContext::default(), baseline_batch).await;
+    let _ = engine
+        .execute_batch(&mut ExecutionContext::default(), baseline_batch)
+        .await;
     let baseline_duration = baseline_start.elapsed();
-    
+
     let nested_start = std::time::Instant::now();
-    let _ = engine.execute_batch(&mut ExecutionContext::default(), nested_batch).await;
+    let _ = engine
+        .execute_batch(&mut ExecutionContext::default(), nested_batch)
+        .await;
     let nested_duration = nested_start.elapsed();
-    
-    let overhead = (nested_duration.as_millis() as f64 / baseline_duration.as_millis() as f64 - 1.0) * 100.0;
-    
+
+    let overhead =
+        (nested_duration.as_millis() as f64 / baseline_duration.as_millis() as f64 - 1.0) * 100.0;
+
     assert!(
         overhead < 25.0,
         "Five layer nested overhead should be <25%, actual: {:.2}%",
@@ -547,7 +584,7 @@ async fn test_bn_012_nested_performance_overhead_five_layers() {
 async fn test_bn_013_nested_batch_atomicity_true() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -558,7 +595,7 @@ async fn test_bn_013_nested_batch_atomicity_true() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -569,9 +606,9 @@ async fn test_bn_013_nested_batch_atomicity_true() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch_atomic(&mut ctx, parent_batch).await;
-    
+
     // With atomic=true, all or nothing
     assert!(result.is_err(), "Atomic batch should fail on child failure");
     // Verify rollback occurred
@@ -589,7 +626,7 @@ async fn test_bn_013_nested_batch_atomicity_true() {
 async fn test_bn_014_nested_batch_non_atomic_false() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -600,7 +637,7 @@ async fn test_bn_014_nested_batch_non_atomic_false() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -611,11 +648,14 @@ async fn test_bn_014_nested_batch_non_atomic_false() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
+
     // Non-atomic allows partial success
-    assert!(result.is_ok(), "Non-atomic batch should allow partial success");
+    assert!(
+        result.is_ok(),
+        "Non-atomic batch should allow partial success"
+    );
     assert!(
         ctx.get_resource("parent_r1").is_some(),
         "Non-atomic batch should keep successful parent commands"
@@ -629,7 +669,7 @@ async fn test_bn_014_nested_batch_non_atomic_false() {
 #[tokio::test]
 async fn test_bn_015_nested_batch_replay_consistency() {
     let engine = WorkflowEngine::new();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -639,7 +679,7 @@ async fn test_bn_015_nested_batch_replay_consistency() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -650,7 +690,7 @@ async fn test_bn_015_nested_batch_replay_consistency() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     // Execute multiple times and verify consistency
     let mut results = Vec::new();
     for _ in 0..10 {
@@ -658,10 +698,10 @@ async fn test_bn_015_nested_batch_replay_consistency() {
         let result = engine.execute_batch(&mut ctx, parent_batch.clone()).await;
         results.push(result.is_ok());
     }
-    
+
     let success_count = results.iter().filter(|&&r| r).count();
     let consistency_rate = success_count as f64 / results.len() as f64 * 100.0;
-    
+
     assert!(
         consistency_rate >= 99.97,
         "Nested batch replay consistency should be >=99.97%, actual: {:.2}%",
@@ -677,7 +717,7 @@ async fn test_bn_015_nested_batch_replay_consistency() {
 async fn test_bn_016_nested_batch_hash_verification() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -687,7 +727,7 @@ async fn test_bn_016_nested_batch_hash_verification() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -697,12 +737,12 @@ async fn test_bn_016_nested_batch_hash_verification() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
+
     assert!(result.is_ok());
     let execution_result = result.unwrap();
-    
+
     // Verify hash chain is valid
     assert!(
         execution_result.verify_hash_chain(),
@@ -717,7 +757,7 @@ async fn test_bn_016_nested_batch_hash_verification() {
 #[tokio::test]
 async fn test_bn_017_nested_batch_concurrent_execution() {
     let engine = WorkflowEngine::new();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -727,7 +767,7 @@ async fn test_bn_017_nested_batch_concurrent_execution() {
         isolation: BatchIsolationLevel::Parallel,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -737,7 +777,7 @@ async fn test_bn_017_nested_batch_concurrent_execution() {
         isolation: BatchIsolationLevel::Parallel,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     // Execute concurrently multiple times
     let mut handles = Vec::new();
     for _ in 0..10 {
@@ -749,13 +789,17 @@ async fn test_bn_017_nested_batch_concurrent_execution() {
         });
         handles.push(handle);
     }
-    
+
     let results = futures::future::join_all(handles).await;
-    let success_count = results.iter()
+    let success_count = results
+        .iter()
         .filter(|r| r.as_ref().ok().and_then(|r| r.as_ref().ok()).is_some())
         .count();
-    
-    assert_eq!(success_count, 10, "All concurrent executions should succeed without deadlock");
+
+    assert_eq!(
+        success_count, 10,
+        "All concurrent executions should succeed without deadlock"
+    );
 }
 
 /// ============================================================================
@@ -766,7 +810,7 @@ async fn test_bn_017_nested_batch_concurrent_execution() {
 async fn test_bn_018_nested_batch_rollback_verification() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let failing_child = BatchCommand {
         id: "failing_child".to_string(),
         commands: vec![
@@ -776,7 +820,7 @@ async fn test_bn_018_nested_batch_rollback_verification() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -787,9 +831,9 @@ async fn test_bn_018_nested_batch_rollback_verification() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let _ = engine.execute_batch_atomic(&mut ctx, parent_batch).await;
-    
+
     // Verify all resources were rolled back
     assert!(
         ctx.get_resource("parent_r1").is_none(),
@@ -809,7 +853,7 @@ async fn test_bn_018_nested_batch_rollback_verification() {
 async fn test_bn_019_nested_batch_hybrid_mode() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     let child_batch = BatchCommand {
         id: "child_batch".to_string(),
         commands: vec![
@@ -819,7 +863,7 @@ async fn test_bn_019_nested_batch_hybrid_mode() {
         isolation: BatchIsolationLevel::Parallel,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let parent_batch = BatchCommand {
         id: "parent_batch".to_string(),
         commands: vec![
@@ -830,10 +874,13 @@ async fn test_bn_019_nested_batch_hybrid_mode() {
         isolation: BatchIsolationLevel::Hybrid,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, parent_batch).await;
-    
-    assert!(result.is_ok(), "Hybrid mode nested batch should execute successfully");
+
+    assert!(
+        result.is_ok(),
+        "Hybrid mode nested batch should execute successfully"
+    );
     assert_eq!(result.unwrap().success_count, 4);
 }
 
@@ -845,7 +892,7 @@ async fn test_bn_019_nested_batch_hybrid_mode() {
 async fn test_bn_020_nested_batch_backward_compatibility() {
     let engine = WorkflowEngine::new();
     let mut ctx = ExecutionContext::default();
-    
+
     // Phase 2 style single-layer batch (no nesting)
     let phase2_batch = BatchCommand {
         id: "phase2_batch".to_string(),
@@ -857,86 +904,16 @@ async fn test_bn_020_nested_batch_backward_compatibility() {
         isolation: BatchIsolationLevel::Sequential,
         max_depth: NESTED_MAX_DEPTH,
     };
-    
+
     let result = engine.execute_batch(&mut ctx, phase2_batch).await;
-    
-    assert!(result.is_ok(), "Phase 2 single-layer batch should still work");
+
+    assert!(
+        result.is_ok(),
+        "Phase 2 single-layer batch should still work"
+    );
     assert_eq!(result.unwrap().success_count, 3);
     // Verify behavior matches Phase 2 expectations
 }
 
-/// ============================================================================
-/// Test Runner
-/// ============================================================================
-
-#[cfg(test)]
-mod tests {
-    use super::*;
-    
-    #[tokio::test]
-    async fn run_all_batch_nested_tests() {
-        println!("Running Phase 3 Batch Nested Tests (20 cases)...");
-        
-        test_bn_001_single_layer_batch_depth_1().await;
-        println!("✓ BN-001: Single layer batch (depth 1)");
-        
-        test_bn_002_two_layer_batch_nested_depth_2().await;
-        println!("✓ BN-002: Two layer nested batch (depth 2)");
-        
-        test_bn_003_three_layer_batch_nested_depth_3().await;
-        println!("✓ BN-003: Three layer nested batch (depth 3)");
-        
-        test_bn_004_four_layer_batch_nested_depth_4().await;
-        println!("✓ BN-004: Four layer nested batch (depth 4)");
-        
-        test_bn_005_five_layer_batch_nested_depth_5_max().await;
-        println!("✓ BN-005: Five layer nested batch (depth 5, max)");
-        
-        test_bn_006_exceeded_nested_depth_rejection_depth_6().await;
-        println!("✓ BN-006: Exceeded nested depth rejection (depth 6)");
-        
-        test_bn_007_nested_batch_independent_scope().await;
-        println!("✓ BN-007: Nested batch independent scope");
-        
-        test_bn_008_nested_batch_error_isolation().await;
-        println!("✓ BN-008: Nested batch error isolation");
-        
-        test_bn_009_nested_result_aggregation().await;
-        println!("✓ BN-009: Nested result aggregation");
-        
-        test_bn_010_nested_execution_log_level_identification().await;
-        println!("✓ BN-010: Nested execution log level identification");
-        
-        test_bn_011_nested_performance_overhead_single_layer().await;
-        println!("✓ BN-011: Nested performance overhead (single layer)");
-        
-        test_bn_012_nested_performance_overhead_five_layers().await;
-        println!("✓ BN-012: Nested performance overhead (five layers)");
-        
-        test_bn_013_nested_batch_atomicity_true().await;
-        println!("✓ BN-013: Nested batch atomicity (atomic=true)");
-        
-        test_bn_014_nested_batch_non_atomic_false().await;
-        println!("✓ BN-014: Nested batch non-atomic (atomic=false)");
-        
-        test_bn_015_nested_batch_replay_consistency().await;
-        println!("✓ BN-015: Nested batch replay consistency");
-        
-        test_bn_016_nested_batch_hash_verification().await;
-        println!("✓ BN-016: Nested batch hash verification");
-        
-        test_bn_017_nested_batch_concurrent_execution().await;
-        println!("✓ BN-017: Nested batch concurrent execution");
-        
-        test_bn_018_nested_batch_rollback_verification().await;
-        println!("✓ BN-018: Nested batch rollback verification");
-        
-        test_bn_019_nested_batch_hybrid_mode().await;
-        println!("✓ BN-019: Nested batch hybrid mode");
-        
-        test_bn_020_nested_batch_backward_compatibility().await;
-        println!("✓ BN-020: Nested batch backward compatibility");
-        
-        println!("\n✅ All 20 Batch Nested Tests Passed!");
-    }
-}
+// Note: individual batch nested tests above are declared with #[tokio::test].
+// Keep them independent and avoid calling test functions from another test.

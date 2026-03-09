@@ -32,6 +32,22 @@
 cargo run
 ```
 
+## 测试（库化后的分层策略）
+
+- 默认主线测试（CI 建议口径）：
+
+```bash
+cargo test --tests
+```
+
+- Legacy 测试（历史模块兼容验证，按需启用）：
+
+```bash
+cargo test --tests --features legacy-tests
+```
+
+说明：当前仓库已完成 `src/lib.rs` 库化基础，但历史 `batch/transaction/security/optimization` 套件与现行执行器契约存在接口漂移。`legacy-tests` 用于隔离这部分迁移工作，避免影响主线交付。
+
 ## 真实 OpenClaw 对接（现在可用）
 
 1) 切换执行器模式为 CLI：

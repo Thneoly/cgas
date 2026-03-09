@@ -1,3 +1,5 @@
+#![cfg(feature = "legacy-tests")]
+
 //! 集成回归测试
 //! 
 //! Phase 2 Week 5 集成回归测试

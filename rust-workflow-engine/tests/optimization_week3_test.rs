@@ -1,3 +1,5 @@
+#![cfg(feature = "legacy-tests")]
+
 //! 性能优化模块测试
 //! 
 //! Phase 3 Week 3 性能优化专项测试

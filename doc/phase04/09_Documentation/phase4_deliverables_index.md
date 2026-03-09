@@ -8,6 +8,14 @@
 
 ---
 
+## 🔄 2026-03-08 状态更新
+
+- 已新增 Week 4 关键交付文件骨架 (部署、健康检查、E2E、性能、72h、On-call、Gate v5、周总结、关闭仪式、复盘、验收矩阵)。
+- 已将误放在 `doc/phase04/` 的 Phase 3 Week 5 文档迁回 `doc/phase03/`。
+- 当前状态从“纯计划”更新为“计划+执行模板已就绪，待实测回填”。
+
+---
+
 ## 📁 目录结构
 
 ```
@@ -125,7 +133,7 @@
 
 **Phase 4 交付物**: `/home/cc/Desktop/code/AIPro/cgas/doc/phase04/`
 
-**Phase 3 交付物**: `/home/cc/Desktop/code/AIPro/cgas/doc/phase04/` (临时，Phase 3 归档应在 `doc/phase03/`)
+**Phase 3 交付物**: `/home/cc/Desktop/code/AIPro/cgas/doc/phase03/`
 
 ### 工作副本
 

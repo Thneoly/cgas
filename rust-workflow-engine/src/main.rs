@@ -1,25 +1,14 @@
-mod blackboard_agent;
-mod contract;
-mod engine;
-mod error;
-mod executor;
-mod gate_report;
-mod gates;
-mod metrics;
-mod model;
-mod workflow_plan;
-
-use crate::engine::{EngineConfig, WorkflowEngine};
-use crate::executor::{CliOpenClawExecutor, MockOpenClawExecutor, OpenClawExecutor};
-use crate::gates::{
-    gate_artifact_skill_execution, gate_dispatch_audit_structured, gate_phase2_readiness,
-    gate_phase0_ci_integration, gate_phase0_contract_defined, gate_phase0_contract_frozen,
-    gate_phase0_gate_report_ready, gate_phase0_replay_set_ready, gate_phase0_sample_minimum,
-    gate_phase0_stakeholders_approved, gate_phase0_validator_ready, gate_pm_dev_qa_approved,
+use rust_workflow_engine::engine::{EngineConfig, WorkflowEngine};
+use rust_workflow_engine::executor::{CliOpenClawExecutor, MockOpenClawExecutor, OpenClawExecutor};
+use rust_workflow_engine::gates::{
+    gate_artifact_skill_execution, gate_dispatch_audit_structured, gate_phase0_ci_integration,
+    gate_phase0_contract_defined, gate_phase0_contract_frozen, gate_phase0_gate_report_ready,
+    gate_phase0_replay_set_ready, gate_phase0_sample_minimum, gate_phase0_stakeholders_approved,
+    gate_phase0_validator_ready, gate_phase2_readiness, gate_pm_dev_qa_approved,
     gate_security_or_exception,
 };
-use crate::model::{Role, RoleState, WorkflowContext};
-use crate::workflow_plan::{WorkflowPlan, WorkflowStage};
+use rust_workflow_engine::model::{Role, RoleState, WorkflowContext};
+use rust_workflow_engine::workflow_plan::{WorkflowPlan, WorkflowStage};
 use std::collections::HashMap;
 use std::env;
 use std::fs;
@@ -329,17 +318,19 @@ fn register_stage_gates(
             "dispatch_audit_structured" => engine.register_gate(gate_dispatch_audit_structured),
             "artifact_skill_execution" => engine.register_gate(gate_artifact_skill_execution),
             "phase2_readiness" => engine.register_gate(gate_phase2_readiness),
-            
+
             // Phase 0 gates
             "phase0_contract_defined" => engine.register_gate(gate_phase0_contract_defined),
-            "phase0_stakeholders_approved" => engine.register_gate(gate_phase0_stakeholders_approved),
+            "phase0_stakeholders_approved" => {
+                engine.register_gate(gate_phase0_stakeholders_approved)
+            }
             "phase0_contract_frozen" => engine.register_gate(gate_phase0_contract_frozen),
             "phase0_validator_ready" => engine.register_gate(gate_phase0_validator_ready),
             "phase0_replay_set_ready" => engine.register_gate(gate_phase0_replay_set_ready),
             "phase0_sample_minimum" => engine.register_gate(gate_phase0_sample_minimum),
             "phase0_gate_report_ready" => engine.register_gate(gate_phase0_gate_report_ready),
             "phase0_ci_integration" => engine.register_gate(gate_phase0_ci_integration),
-            
+
             other => {
                 return Err(format!("unknown gate in workflow plan: {}", other).into());
             }

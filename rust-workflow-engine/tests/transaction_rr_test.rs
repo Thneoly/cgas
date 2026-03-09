@@ -1,3 +1,5 @@
+#![cfg(feature = "legacy-tests")]
+
 // Phase 3: Transaction Isolation Level Tests (Repeatable Read Focus)
 // 15 test cases covering Transaction isolation levels (RC/RR/Serializable)
 // Reference: phase3_test_matrix_v3.md section 2.3

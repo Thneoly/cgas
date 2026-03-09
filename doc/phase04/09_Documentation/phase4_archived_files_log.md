@@ -119,3 +119,25 @@
 ---
 
 *Archived Files Log - 2026-03-07*
+
+---
+
+## 🔧 2026-03-08 目录纠偏记录
+
+**执行人**: Copilot  
+**动作**: 将误归档到 `doc/phase04/` 的 Phase 3 Week 5 文档迁回 `doc/phase03/`
+
+### 已迁移文件
+
+- `doc/phase04/02_Weekly_Reports/week5_observability_summary.md` -> `doc/phase03/03_Weekly_Reports/week5_observability_summary.md`
+- `doc/phase04/02_Weekly_Reports/week5_qa_summary.md` -> `doc/phase03/03_Weekly_Reports/week5_qa_summary.md`
+- `doc/phase04/02_Weekly_Reports/week5_security_summary.md` -> `doc/phase03/03_Weekly_Reports/week5_security_summary.md`
+- `doc/phase04/07_Exit_Gate_Materials/e2e_regression_week5_final.md` -> `doc/phase03/06_Exit_Gate/e2e_regression_week5_final.md`
+- `doc/phase04/07_Exit_Gate_Materials/exit_gate_15_metrics_validation.md` -> `doc/phase03/06_Exit_Gate/exit_gate_15_metrics_validation.md`
+- `doc/phase04/07_Exit_Gate_Materials/observability_exit_gate_validation.md` -> `doc/phase03/06_Exit_Gate/observability_exit_gate_validation.md`
+- `doc/phase04/07_Exit_Gate_Materials/replay_consistency_validation.md` -> `doc/phase03/06_Exit_Gate/replay_consistency_validation.md`
+- `doc/phase04/07_Exit_Gate_Materials/security_gates_exit_gate_validation.md` -> `doc/phase03/06_Exit_Gate/security_gates_exit_gate_validation.md`
+- `doc/phase04/07_Exit_Gate_Materials/boundary_scenarios_final_validation.md` -> `doc/phase03/06_Exit_Gate/boundary_scenarios_final_validation.md`
+- `doc/phase04/07_Exit_Gate_Materials/code_freeze_security_week5.md` -> `doc/phase03/06_Exit_Gate/code_freeze_security_week5.md`
+
+**结果**: `doc/phase04/` 与 `doc/phase03/` 阶段边界恢复一致。
